@@ -681,7 +681,7 @@ urlpatterns = [
     path('getInvoiceDetails',views.getInvoiceDetails, name='getInvoiceDetails'),
     # --------------------  Credit Note - end - harikrishnan  ------------------------------- 
 
-
+    path('sample', views.sample, name = 'sample'),
     path('eway_bills', views.eway_bills, name = 'eway_bills'),
     path('create_eway_bill', views.create_eway_bill, name = 'create_eway_bill'),
 

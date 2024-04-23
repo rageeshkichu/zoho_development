@@ -67,9 +67,55 @@
           <ol class="breadcrumb">
             {% if log_details.user_type == 'Staff' %} <li class="breadcrumb-item"><a href="{% url 'staff_dashboard' %}" class="text-warning-emphasis">Dashboard</a></li>{% endif %}
             {% if log_details.user_type == 'Company' %} <li class="breadcrumb-item"><a href="{% url 'company_dashboard' %}" class="text-warning-emphasis">Dashboard</a></li>{% endif %}
-             <li class="breadcrumb-item"><a href="{% url 'salesorder_list' %}" class="text-warning-emphasis"></a></li>
+             <li class="breadcrumb-item"><a href="{% url 'salesorder_list' %}" class="text-warning-emphasis">E way bills</a></li>
+             <li class="breadcrumb-item" aria-current="page">Over view</li>
           </ol>
-      
+      </nav>
+      <div class="row mt-5">
+          <div class="col-md-12 col-sm-12 col-lg-12 flex-column">
+              <div class="card mb-3 bg-black shadow p-3 mb-5 rounded">
+                <div class="row mt-4">
+                  <div class="col-7 col-sm-7 col-lg-6"><a class="text-white" style="font-size: 1.5rem;">All E way Bills</a></div>
+                  <div class="row mt-2">
+                    <div class="col-md-4 col-lg-4 col-sm-10">
+                      <input type="text" id="search" class="form-control bg-light text-dark" placeholder="Search.." autocomplete="off">
+                    </div>
+                    <div class="col-md-2 col-lg-2 col-sm-2">
+                      <div class="dropdown">
+                        <a class="btn text-center px-4 pt-2 btn-outline-warning" id="sortbutton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" role="button" >
+                          <i  class="fas fa-sort m-1"></i>
+                        </a>
+                       
+                        <div class="dropdown-menu m-1">
+                          <a class="dropdown-item" href="">All</a>
+                          <a class="dropdown-item" href="">Name</a>
+                          <a class="dropdown-item" href="">E Way Bill No</a>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-12 col-lg-6 col-md-6  ">
+                      <div class="d-flex justify-content-end g-1">
+
+                        <a onclick="ExportToExcel()" class="btn text-center pt-2 btn-outline-warning " >
+                          <i class='fas fa-file-export' style='font-size:18px'></i> <span > Export</span>
+                        </a>
+                        <a data-toggle="modal" data-target="#importmodal" class="btn text-center pt-2 btn-outline-warning" onclick="sampleexcel()">
+                          <i class="fas fa-file-import" style='font-size:18px'></i> <span style="margin-top: 3px;"> Import</span>
+                        </a>
+                        <div class="dropdown">
+                        <a class="btn text-center  pt-2 btn-outline-warning" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" role="button" >
+                          <i class="fa fa-filter mt-1"></i>
+                        </a>
+                        <div class="dropdown-menu m-1 ">
+                          <a class="dropdown-item" href="">All</a>
+                          <a class="dropdown-item" href="">Draft</a>
+                          <a class="dropdown-item" href="">Saved</a>
+                        </div>
+                        </div>
+                        <a  class="btn btn-outline-warning text-right px-3 py-2 flex-sm-row" role="button"  href="">
+                          <i class="fa fa-plus fs-4" ><span> New</span></i>
+                        </a>
+  
 
                       </div>
 
@@ -92,15 +138,15 @@
   scrollbar-width: none;  /* Firefox */
 }
 </style>
-<div class="col-7 col-sm-7 col-lg-6"><a class="text-white" style="font-size: 1.5rem;">All Sales Order</a></div>
+        
           <div class="table-responsive example">
             <table class="table  text-white" id="myTable" >
               <thead>
                 <tr>
-                  <th style="text-align: center;">Serial No.</th>
+                  <th style="text-align: center;">SERIAL NO</th>
                   <th style="text-align: center;">DATE</th>
-                  <th style="text-align: center;">E-Way Bill No.</th>
-                  <th style="text-align: center;">Name</th>
+                  <th style="text-align: center;">E WAY BILL NO</th>
+                  <th style="text-align: center;">NAME</th>
                   <th style="text-align: center;">MAIL ID</th>
                   <th style="text-align: center;">AMOUNT</th>
                   <th style="text-align: center;">STATUS</th>
@@ -109,8 +155,8 @@
              
               <tbody>
                 {% for i in sale %}
-                <tr id="over" class="clickable-row" data-href="{% url 'view_salesorder_details' i.id %}">
-                  <td style="text-align: center;">{{forloop.counter}}</td>
+                <tr id="over" class="clickable-row" data-href="">
+                  <td style="text-align: center;"></td>
                   <td></td>
                   <td></td>
                   <td></td>
@@ -127,7 +173,7 @@
           </div>
         </div>
        
-        
+
 
 
       </div>
@@ -181,31 +227,10 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- Check if there's a success message and trigger SweetAlert -->
-    
-  
-
+    <script>
     
   </script>
- 
-  <script>
-    function ExportToExcel() {
-      console.log("myTable");
-      $('in1').prop
-      const table = document.getElementById('myTable'); // Replace 'myTable' with your table's ID
-      const wb = XLSX.utils.table_to_book(table);
   
-      XLSX.writeFile(wb, 'salesorder_list.xlsx');
-  }
-  </script>
-  
-  <script>
-    function sampleexcel(){
-      const table1 = document.querySelector('#employeemodeltable');
-      const ws1 = XLSX.utils.table_to_sheet(table1);
-      const wb1 = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb1, ws1, 'Sheet1');
-      XLSX.writeFile(wb1, 'salesorder list.xlsx');
-    }
   </script>
 
 {% endblock %}

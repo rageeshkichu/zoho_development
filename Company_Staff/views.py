@@ -83,6 +83,7 @@ from django.shortcuts import render
 from .models import RetainerInvoice
 from .models import RetainerInvoice, Retaineritems
 from .models import RetainerInvoiceComment  # Import the RetainerInvoiceComment model
+from Company_Staff.models import Customer
 
 # Create your views here.
 
@@ -28300,6 +28301,11 @@ def loan_check(request):
         return JsonResponse(data)
 
 
+def sample(request):
+    customers = Customer.objects.all()
+    return render(request,'zohomodules/eway_bills/sample.html',{'customers':customers})
+
+
 def eway_bills(request):
     if 'login_id' in request.session:
         log_id = request.session['login_id']
@@ -28329,6 +28335,7 @@ def eway_bills(request):
             return render(request,'zohomodules/eway_bills/eway_bills.html',context)
 
 def create_eway_bill(request):
+    customers = Customer.objects.filter(customer_status = 'Active')
     if 'login_id' in request.session:
         log_id = request.session['login_id']
         if 'login_id' not in request.session:
@@ -28339,11 +28346,12 @@ def create_eway_bill(request):
                 item=Items.objects.filter(company=dash_details.company)
                 allmodules= ZohoModules.objects.get(company=dash_details.company,status='New')
                 context = {
+                        'customers':customers,
                         'details': dash_details,
                         'item':item,
                         'allmodules': allmodules,
                 }
-                return render(request,'zohomodules/items/items_list.html',context)
+                return render(request,'zohomodules/eway_bills/create_eway_bill.html',context)
         if log_details.user_type == 'Company':
             dash_details = CompanyDetails.objects.get(login_details=log_details)
             item=Items.objects.filter(company=dash_details)
@@ -28354,4 +28362,4 @@ def create_eway_bill(request):
                     'allmodules': allmodules,
             }
 
-    return render(request, 'create_eway_bill.html')
+            return render(request, 'zohomodules/eway_bills/create_eway_bill.html',context)
