@@ -83,7 +83,7 @@ from django.shortcuts import render
 from .models import RetainerInvoice
 from .models import RetainerInvoice, Retaineritems
 from .models import RetainerInvoiceComment  # Import the RetainerInvoiceComment model
-from Company_Staff.models import Customer
+from Company_Staff.models import Customer,Items
 
 # Create your views here.
 
@@ -28335,31 +28335,55 @@ def eway_bills(request):
             return render(request,'zohomodules/eway_bills/eway_bills.html',context)
 
 def create_eway_bill(request):
-    customers = Customer.objects.filter(customer_status = 'Active')
     if 'login_id' in request.session:
         log_id = request.session['login_id']
-        if 'login_id' not in request.session:
-            return redirect('/')
         log_details= LoginDetails.objects.get(id=log_id)
-        if log_details.user_type == 'Staff':
-                dash_details = StaffDetails.objects.get(login_details=log_details)
-                item=Items.objects.filter(company=dash_details.company)
-                allmodules= ZohoModules.objects.get(company=dash_details.company,status='New')
-                context = {
-                        'customers':customers,
-                        'details': dash_details,
-                        'item':item,
-                        'allmodules': allmodules,
-                }
-                return render(request,'zohomodules/eway_bills/create_eway_bill.html',context)
         if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
             dash_details = CompanyDetails.objects.get(login_details=log_details)
-            item=Items.objects.filter(company=dash_details)
-            allmodules= ZohoModules.objects.get(company=dash_details,status='New')
-            context = {
-                    'details': dash_details,
-                    'item': item,
-                    'allmodules': allmodules,
-            }
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+            dash_details = StaffDetails.objects.get(login_details=log_details)
 
-            return render(request, 'zohomodules/eway_bills/create_eway_bill.html',context)
+        allmodules= ZohoModules.objects.get(company = cmp)
+        cust = Customer.objects.filter(company = cmp, customer_status = 'Active')
+        
+        itms = Items.objects.filter(company = cmp, activation_tag = 'active')
+        
+
+        context = {
+            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'customers': cust,'items':itms,
+            
+        }
+        return render(request, 'zohomodules/eway_bills/create_eway_bill.html', context)
+    else:
+        return redirect('/')
+    
+
+def getItemDetailsAjax3(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+        
+        itemName = request.GET['item']
+        item = Items.objects.filter(company = cmp, item_name = itemName).first()
+
+        context = {
+            'status':True,
+            'id': item.id,
+            'hsn':item.hsn_code,
+            'sales_rate':item.selling_price,
+            'purchase_rate':item.purchase_price,
+            'avl':item.current_stock,
+            'tax': True if item.tax_reference == 'taxable' else False,
+            'gst':item.intrastate_tax,
+            'igst':item.interstate_tax,
+
+        }
+        return JsonResponse(context)
+    else:
+       return redirect('/')

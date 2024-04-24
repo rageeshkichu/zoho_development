@@ -1,17 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    hi
-    <select name="" id="">
-        <option value="">select</option>
-        {% for cust in customers %}
-        <option value="">{{cust.first_name}}</option>
-        {% endfor %}
-    </select>
-</body>
-</html>
+customers = Customer.objects.filter(customer_status = 'Active')
+    items = Items.objects.filter(activation_tag = 'Active')
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        if 'login_id' not in request.session:
+            return redirect('/')
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Staff':
+                dash_details = StaffDetails.objects.get(login_details=log_details)
+                item=Items.objects.filter(company=dash_details.company)
+                allmodules= ZohoModules.objects.get(company=dash_details.company,status='New')
+                context = {
+                        
+                        'customers':customers,
+                        'items':items,
+                        'details': dash_details,
+                        'item':item,
+                        'allmodules': allmodules,
+                }
+                return render(request,'zohomodules/eway_bills/create_eway_bill.html',context)
+        if log_details.user_type == 'Company':
+            dash_details = CompanyDetails.objects.get(login_details=log_details)
+            item=Items.objects.filter(company=dash_details)
+            allmodules= ZohoModules.objects.get(company=dash_details,status='New')
+            context = {
+                    'details': dash_details,
+                    'item': item,
+                    'allmodules': allmodules,
+            }
+
+            return render(request, 'zohomodules/eway_bills/create_eway_bill.html',context)
