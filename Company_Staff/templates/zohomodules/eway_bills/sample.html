@@ -1,31 +1,59 @@
-customers = Customer.objects.filter(customer_status = 'Active')
-    items = Items.objects.filter(activation_tag = 'Active')
-    if 'login_id' in request.session:
-        log_id = request.session['login_id']
-        if 'login_id' not in request.session:
-            return redirect('/')
-        log_details= LoginDetails.objects.get(id=log_id)
-        if log_details.user_type == 'Staff':
-                dash_details = StaffDetails.objects.get(login_details=log_details)
-                item=Items.objects.filter(company=dash_details.company)
-                allmodules= ZohoModules.objects.get(company=dash_details.company,status='New')
-                context = {
-                        
-                        'customers':customers,
-                        'items':items,
-                        'details': dash_details,
-                        'item':item,
-                        'allmodules': allmodules,
-                }
-                return render(request,'zohomodules/eway_bills/create_eway_bill.html',context)
-        if log_details.user_type == 'Company':
-            dash_details = CompanyDetails.objects.get(login_details=log_details)
-            item=Items.objects.filter(company=dash_details)
-            allmodules= ZohoModules.objects.get(company=dash_details,status='New')
-            context = {
-                    'details': dash_details,
-                    'item': item,
-                    'allmodules': allmodules,
+function changePlaceOfSupply() {
+        var placeOfSupply = document.getElementById("placeOfSupply").value;
+        var cmpState = document.getElementById("cmpstate").value;
+    
+        // Get all rows in the table body
+        var rows = document.querySelectorAll("#items-table-body tr");
+    
+        // Loop through each row and update tax dropdowns
+        rows.forEach(function(row) {
+            var taxGST = row.querySelector(".tax_ref_gst");
+            var taxIGST = row.querySelector(".tax_ref_igst");
+    
+            if (placeOfSupply === "") {
+                taxGST.style.display = "block";
+                taxIGST.style.display = "none";
+            } else if (cmpState === placeOfSupply) {
+                // If cmpState is equal to placeOfSupply, display GST and hide IGST
+                taxGST.style.display = "block";
+                taxIGST.style.display = "none";
+            } else if (cmpState !== placeOfSupply) {
+                // If cmpState is not equal to placeOfSupply, display IGST and hide GST
+                taxGST.style.display = "none";
+                taxIGST.style.display = "block";
             }
+        });
+    }
+    
+    // Add onchange event listener to the place of supply select element
+    document.getElementById("placeOfSupply").onchange = changePlaceOfSupply;
+    
+    // Trigger the function once on page load to initialize based on the initial values
+    changePlaceOfSupply();
 
-            return render(request, 'zohomodules/eway_bills/create_eway_bill.html',context)
+
+
+
+
+
+
+    // Function to calculate and display the total for a row
+// Function to calculate the total for a specific row
+function calculateRowTotal(rowId) {
+    var row = $('#tab_row' + rowId);
+    var qty = parseFloat(row.find('.qty').val()) || 0; // Handle cases where the input is empty
+    var price = parseFloat(row.find('.price').val()) || 0; // Handle cases where the input is empty
+    var discount = parseFloat(row.find('.disc').val()) || 0; // Handle cases where the input is empty
+
+    var total = (qty * price) - discount;
+    row.find('.total').val(total.toFixed(2));
+}
+
+// Function to handle changes in quantity, price, and discount inputs
+$(document).on('input', '.qty, .price, .disc', function() {
+    var rowId = $(this).closest('tr').attr('id').replace('tab_row', '');
+    calculateRowTotal(rowId);
+});
+
+// Initial calculation for the first row
+calculateRowTotal(1);

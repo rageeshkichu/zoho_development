@@ -586,6 +586,24 @@
                             </div>
                           </div>
                           <script>
+
+function refreshTax(){
+        var cmpState = $('#cmpstate').val();
+        var plc = $('#placeOfSupply').val();
+        if(cmpState == plc){
+            $('.tax_ref').css('display','none');
+            $('.tax_ref_gst').css('display','block');
+            document.getElementById('taxamountCGST').style.display = 'flex';
+            document.getElementById('taxamountSGST').style.display = 'flex';
+            document.getElementById('taxamountIGST').style.display = 'none';
+        }else{
+            $('.tax_ref').css('display','none');
+            $('.tax_ref_igst').css('display','block');
+            document.getElementById('taxamountCGST').style.display = 'none';
+            document.getElementById('taxamountSGST').style.display = 'none';
+            document.getElementById('taxamountIGST').style.display = 'flex';
+        }
+    }
                         
                             function getItemDetails(inpId, value){
                         
@@ -627,7 +645,8 @@
                                                       
                                                       document.getElementById('taxGST'+n).value = response.gst;
                                                       document.getElementById('taxIGST'+n).value = response.igst;
-
+                                                      refreshTax();
+                                                      calc();
                                                       
                                                   }
                                               },
@@ -637,61 +656,64 @@
                                     alert('Select Place of Supply.!')}
                               }
 
-    function changePlaceOfSupply() {
-    var placeOfSupply = document.getElementById("placeOfSupply").value;
-    var cmpState = document.getElementById("cmpstate").value;
-
-    // Get all rows in the table body
-    var rows = document.querySelectorAll("#items-table-body tr");
-
-    // Loop through each row and update tax dropdowns
-    rows.forEach(function(row) {
-        var taxGST = row.querySelector(".tax_ref_gst");
-        var taxIGST = row.querySelector(".tax_ref_igst");
-
-        if (placeOfSupply === "") {
-            taxGST.style.display = "block";
-            taxIGST.style.display = "none";
-        } else if (cmpState === placeOfSupply) {
-            // If cmpState is equal to placeOfSupply, display GST and hide IGST
-            taxGST.style.display = "block";
-            taxIGST.style.display = "none";
-        } else if (cmpState !== placeOfSupply) {
-            // If cmpState is not equal to placeOfSupply, display IGST and hide GST
-            taxGST.style.display = "none";
-            taxIGST.style.display = "block";
+                              function changeItemQty(id){
+        id_val = id.slice(3)
+        var qty = document.getElementById(id).value;
+        var avl_val = document.getElementById(`avl${id_val}`).innerText;
+    
+        if( parseInt(qty) > parseInt(avl_val) ){
+            alert("Quantity Greater than Available Quantity")
+            document.getElementById(id).value = avl_val;
+            calc()
+        }else{
+            document.getElementById(`qtyspan${id_val}`).textContent = parseInt(avl_val) - parseInt(qty);
         }
+    }
+
+    $(document).ready(function(){
+        $('#items-table-body').on('keyup change', function () {
+            refreshTax();
+            calc();
+        });
     });
-}
 
-// Add onchange event listener to the place of supply select element
-document.getElementById("placeOfSupply").onchange = changePlaceOfSupply;
+    $(document).ready(function(){
+        $(document).on("blur", ".disc", function(){
+            if($(this).val() != ""){
+            }else{
+            $(this).val(0);
+            calc();
+            }
+        }); 
+    });
 
-// Trigger the function once on page load to initialize based on the initial values
-changePlaceOfSupply();
 
 
 
-// Function to calculate and display the total for a row
-// Function to calculate the total for a specific row
-function calculateRowTotal(rowId) {
-    var row = $('#tab_row' + rowId);
-    var qty = parseFloat(row.find('.qty').val()) || 0; // Handle cases where the input is empty
-    var price = parseFloat(row.find('.price').val()) || 0; // Handle cases where the input is empty
-    var discount = parseFloat(row.find('.disc').val()) || 0; // Handle cases where the input is empty
+    function calc() {
+      $('#invoiceItemsTable tbody tr').each(function () {
+        var html = $(this).html();
+        if (html != '') {
+          var qty = $(this).find('.qty').val();
+          
+          var price = $(this).find('.price').val();
+          
+          var dis = $(this).find('.disc').val();
+          var bc = $("#placeOfSupply").val();
+          var compstate = $("#cmpstate").val();
 
-    var total = (qty * price) - discount;
-    row.find('.total').val(total.toFixed(2));
-}
-
-// Function to handle changes in quantity, price, and discount inputs
-$(document).on('input', '.qty, .price, .disc', function() {
-    var rowId = $(this).closest('tr').attr('id').replace('tab_row', '');
-    calculateRowTotal(rowId);
-});
-
-// Initial calculation for the first row
-calculateRowTotal(1);
+          if(bc==compstate){
+              var tax = $(this).find('.tax_ref_gst').val();
+          }
+          else{
+              var tax = $(this).find('.tax_ref_igst').val();
+          }
+          $(this).find('.total').val((parseFloat(qty) * parseFloat(price)) - parseFloat(dis));
+          $(this).find('.itemTaxAmount').val(((qty * price)-dis) * (tax / 100));
+          calc_total();
+        }
+      });
+    }
 
 
 
@@ -798,6 +820,205 @@ calculateRowTotal(1);
     });   
                                             
     </script>
+
+
+<div class="row clearfix" style="margin-top:20px">
+  <div class="col-md-6">
+      <textarea class="form-control bg-black text-white mt-3"  id="" name="note" placeholder="Note" style="height: 190px;"></textarea>
+      <input type="file" class="form-control" name="file"  style="margin-top: 10px;">
+      <textarea class="form-control bg-black text-white mt-3"  id="" name="terms" placeholder="Terms & conditions" style="height: 130px;"></textarea>
+  </div>            
+  <div class="col-md-1"></div>
+  <div class="col-md-5 table-responsive-md mt-3 " id="invoiceItemsTableTotal" style="background-color:rgba(0,0,0,.4); border: 1px solid rgba(128, 128, 128, 0.6); margin-left: -2vh;">
+      <div class="p-3">
+          <div class="row container-fluid p-2 m-0">
+              <div class="col-sm-4 mt-2"><label class="text-center text-white">Sub Total</label></div>
+              <div class="col-sm-1 mt-2">:</div>
+              <div class="col-sm-7 mt-2"><input type="number" step="any" name='subtotal' value=0.00 readonly class="form-control bg-black text-white" id="sub_total"></div>
+          </div>
+          <div class="row container-fluid p-2 m-0" id="taxamountIGST" style="display: flex;">
+              <div class="col-sm-4 mt-2"><label for="a" class="text-center text-white">IGST</label></div>
+              <div class="col-sm-1 mt-2">:</div>
+              <div class="col-sm-7 mt-2"><input type="number" name='igst' step="any" id="igstAmount" value=0.00 readonly class="form-control bg-black text-white"/></div>
+          </div>
+          <div class="row container-fluid p-2 m-0" style="display: none;" id="taxamountCGST">
+              <div class="col-sm-4 mt-2"><label for="a" class="text-center text-white">CGST</label></div>
+              <div class="col-sm-1 mt-2">:</div>
+              <div class="col-sm-7 mt-2"><input type="number" name='cgst' step="any" id="cgstAmount" value=0.00 readonly class="form-control bg-black text-white"/></div>
+          </div>
+          <div class="row container-fluid p-2 m-0" style="display: none;" id="taxamountSGST">
+              <div class="col-sm-4 mt-2"><label for="a" class="text-cente text-white">SGST</label></div>
+              <div class="col-sm-1 mt-2">:</div>
+              <div class="col-sm-7 mt-2"><input type="number" name='sgst' step="any" id="sgstAmount" value=0.00 readonly class="form-control bg-black text-white"/></div>
+          </div>
+          <div class="row container-fluid p-2 m-0">
+              <div class="col-sm-4 mt-2"><label for="a" class="text-center text-white">Tax Amount</label></div>
+              <div class="col-sm-1 mt-2">:</div>
+              <div class="col-sm-7 mt-2"><input type="number" step="any" name='taxamount' id="tax_amount" value=0.00 readonly class="form-control bg-black text-white"/></div>
+          </div>
+          
+          <div class="row container-fluid p-2 m-0">
+              <div class="col-sm-4 mt-2"><label for="a" class="text-center text-white">Ship Charge</label></div>
+              <div class="col-sm-1 mt-2">:</div>
+              <div class="col-sm-7 mt-2"><input type="number" step="any" name='ship' id="ship" value=0.00 class="form-control bg-black text-white"/></div>
+          </div>
+          <div class="row container-fluid p-2 m-0">
+              <div class="col-sm-4 mt-2"><label for="a" class="text-center text-white">Adjustment</label></div>
+              <div class="col-sm-1 mt-2">:</div>
+              <div class="col-sm-7 mt-2"><input type="number" step="any" name='adj' id="adj" value=0.00 class="form-control bg-black text-white"/></div>
+          </div>
+          <div class="row container-fluid p-2 m-0">
+              <div class="col-sm-4 mt-2"><label for="a" class="text-center text-white">Grand Total</label></div>
+              <div class="col-sm-1 mt-2">:</div>
+              <div class="col-sm-7 mt-2"><input type="number" name='grandtotal' id="grandtotal" value=0.00 readonly class="form-control bg-black text-white"/></div>
+          </div>
+      </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-7"></div>
+  <div class="col-md-5 table-responsive-md mt-3 " id="invoiceItemsTablePaid" style="background-color:rgba(0,0,0,.4); border: 1px solid rgba(128, 128, 128, 0.6); margin-left: -2vh;">
+      <div class="p-3">
+          <div class="row container-fluid p-2 m-0">
+              <div class="col-sm-4 mt-2"><label for="a" class="text-center text-white">Paid Off</label></div>
+              <div class="col-sm-1 mt-2">:</div>
+              <div class="col-sm-7 mt-2"><input type="number" step="any" name='advance' id="advance"  value=0.00 class="form-control bg-black text-white"/></div>
+          </div>
+          <div class="row container-fluid p-2 m-0">
+              <div class="col-sm-4 mt-2"><label for="a" class="text-center text-white">Balance</label></div>
+              <div class="col-sm-1 mt-2">:</div>
+              <div class="col-sm-7 mt-2"><input type="number" name='balance' id="balance" value=0.00 readonly class="form-control bg-black text-white" readonly /></div>
+          </div>
+      </div>
+  </div>
+</div>
+  
+
+
+
+
+  <br>
+  <div class="mt-4">
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="" id="agreeTerms" required>
+        <label for="agreeTerms">Agree to terms and conditions</label>
+        <div class="invalid-feedback">You must agree before submitting.</div>
+    </div>
+  </div>
+  <div class="mt-4">
+    <input type="submit" class="btn save_btn" style="background-color: chocolate; color: white;" value="SAVE" name="Saved" id="save">
+    <input class="btn save_btn" style="background-color: chocolate; color: white;" type="submit" value="DRAFT" name="Draft" id="draft">
+    <input class="btn save_btn" style="background-color: chocolate; color: white;" type="reset" onclick="window.location.href=`{% url 'recurringInvoice' %}`" value="CANCEL" id="cancel">
+  </div>
+</form>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+function calc_total() { 
+      total = 0;
+      $('.total').each(function () {
+          total += parseFloat($(this).val());
+      });
+      taxamount = 0;
+      $('.itemTaxAmount').each(function () {
+          taxamount += parseFloat($(this).val());
+      });
+      $('#sub_total').val(total.toFixed(2));
+      $('#tax_amount').val(taxamount.toFixed(2));
+      var ship = parseFloat($("#ship").val());
+      var adj_val = parseFloat($('#adj').val())
+      var gtot = taxamount + total + ship + adj_val;
+
+      $('#grandtotal').val(gtot.toFixed(2));
+      
+      var adv_val = parseFloat($('#advance').val())
+      var bal = gtot - adv_val
+      $('#balance').val(bal.toFixed(2));
+      splitTax();
+    }
+
+
+    function splitTax(){
+    var bc = $("#placeOfSupply").val();
+    var compstate = $("#cmpstate").val();
+    d=0
+    if (bc == compstate  ) {
+        var gst = taxamount/2
+        $('#cgstAmount').val(parseFloat(gst.toFixed(2)));
+        $('#sgstAmount').val(parseFloat(gst.toFixed(2)));
+        $('#igstAmount').val(parseFloat(d.toFixed(2)));
+    }else{
+        $('#igstAmount').val(taxamount.toFixed(2));
+        $('#cgstAmount').val(d.toFixed(2));
+        $('#sgstAmount').val(d.toFixed(2));
+    }   
+  }
+
+    $(document).ready(function(){
+      $(document).on('keyup',"#ship",function(){
+          var subtot = $('#sub_total').val();
+          var tax = $('#tax_amount').val();
+          var sh = $("#ship").val();
+          var adj = $("#adj").val();
+          $('#grandtotal').val((parseFloat(subtot)+parseFloat(tax)+parseFloat(sh)+parseFloat(adj)).toFixed(2));
+          $('#balance').val((parseFloat($("#grandtotal").val())-parseFloat($("#advance").val())).toFixed(2))
+          
+      });
+
+      $(document).on("blur", "#ship", function(){
+          if($(this).val() != ""){
+          }else{
+          $(this).val(0);
+          calc_total();
+          }
+      }); 
+    });
+
+    $(document).ready(function(){
+      $(document).on("keyup", "#adj", function(){
+          var subtot = $('#sub_total').val();
+          var tax = $('#tax_amount').val();
+          var sh = $("#ship").val();
+          var adj = $("#adj").val();
+          $('#grandtotal').val((parseFloat(subtot)+parseFloat(tax)+parseFloat(sh)+parseFloat(adj)).toFixed(2));
+          $('#balance').val((parseFloat($("#grandtotal").val())-parseFloat($("#advance").val())).toFixed(2))
+      });
+
+      $(document).on("blur", "#adj", function(){
+          if($(this).val() != ""){
+          }else{
+          $(this).val(0);
+          calc_total();
+          }
+      }); 
+    });
+
+    $(document).ready(function() {
+      $("#advance").on('keyup change',function() {
+          var tot_val = $('#grandtotal').val();
+          var adv_val = $('#advance').val();
+          if(adv_val !=""){
+              if (parseFloat(tot_val) < parseFloat(adv_val)){
+                  $('#advance').val(parseFloat(tot_val))
+                  $('#balance').val(0);
+                  alert("Advance Greater than Total Amount")
+      
+              }else{
+                  var bal = parseFloat(tot_val) - parseFloat(adv_val)
+                  $('#balance').val(bal.toFixed(2));
+              }
+          }else{
+              $('#balance').val(parseFloat(tot_val));
+          }
+          
+      })
+    });
+
+</script>
     
 <!-- New item Modal -->
     <div class="modal fade" id="newItem">
@@ -1070,9 +1291,1563 @@ calculateRowTotal(1);
         </div>
       </div>  
   </div>
+
+<!-- New Unit Modal-->   
+  <div class="modal fade" id="unitmodal">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: rgb(32, 35, 37);border-radius: 20px;">
+        <div class="modal-header" style="background: rgb(32, 35, 37);">
+            <h5 class="m-3 text-uppercase" id="shareBillEmailLabel" style="color: #eeeaea;">Add Unit</h5>
+            <button type="button" class="close btn btn-danger" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body" style="background: rgb(32, 35, 37);">
+            <div class="card p-3 m-3" style="background-color: #000;">
+            
+                <div id="error-message-container" style="color: chocolate;"></div>
+                    <form class="needs-validation" novalidate autocomplete="off" id="unitform">
+                        {% csrf_token %}
+                        <label class="text-dark" for="unit"><b>Unit Name</b></label>
+                        <input type="text" class="form-control text-white"  placeholder="Enter unit" id="unitName" name="unit_name" required>
+                        <p class="text-white">eg:KL,PCS,BOX,LTR</p>
+
+                        <div class="row mt-5">
+                            <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="d-flex justify-content-center">
+                                <button class="btn save_btn rounded-pill text-grey w-25 my-1 mx-1 btn-outline-warning" type="button" id="newUnitSave">Save</button>
+                                <button type="button" class="close btn save_btn rounded-pill text-grey w-25 my-1 mx-1 btn-outline-warning close_unit_modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">Cancel</span></button>
+                            </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
                         
                         
-                        
+  <script>
+    $(document).ready(function() {
+        $('#myaccount').selectize();
+    });
+    $(document).ready(function() {
+        $('#selunit').selectize();
+    });
+
+    $(document).on("click", "#newUnitSave", function(event) {
+        event.preventDefault(); // Prevent the default form submission
+        var uName = $("#unitName").val();
+        $.ajax({
+          type: 'POST',
+          url: "{% url 'add_unit' %}",
+          data: {
+            units: uName,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(response) {
+            if (response.message === 'success') {
+              document.getElementById("unitform").reset();
+              if($('#unitmodal').hasClass('show')){
+                    $("#unitmodal .close_unit_modal").click()
+                }
+              reloadUnit(uName);
+            } else {
+              $("#error-message-container").text("Unit with the same name exists");
+            }
+          },
+        });
+      });
+
+      function reloadUnit(unit) {
+      
+        $.ajax({
+                url: "{% url 'getUnitsAjax' %}",
+                type: "GET",
+                dataType: "json",
+                data: $(this).serialize(),
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+            
+                success: function(data) {
+                    var setVal = "";
+                    var $select = $(document.getElementById('selunit'));
+                    var selectize = $select[0].selectize;
+                    $.each(data, function(key, value) {
+                        if(unit == value[1]){
+                            setVal = value[0]
+                        }
+                        selectize.addOption({value:value[0],text:value[1]});
+                        selectize.addItem(value[0]); 
+                    });
+
+                    if(setVal != ""){
+                        selectize.setValue(setVal);
+                    }
+            
+                },
+        
+        });
+      }
+
+    function showAllSelect() {
+        var select1_div = document.getElementById("select1_div");
+        var select2_div = document.getElementById("select2_div");
+        select1_div.style.display = "block";
+        select2_div.style.display = "block";
+    }
+
+    function hideAllSelect() {
+        var select1_div = document.getElementById("select1_div");
+        var select2_div = document.getElementById("select2_div");
+        select1_div.style.display = "none";
+        select2_div.style.display = "none";
+    }
+
+      function toggleFormFields() {
+        var formFields = document.getElementById("formFields");
+        var checkbox = document.querySelector("input[name=trackstate]");
+    
+        if (checkbox.checked) {
+            formFields.style.display = "block";
+        } else {
+            formFields.style.display = "none";
+        }
+        }
+
+        function validateSixDigits(field) {
+              // Define the regular expression pattern for exactly six digits
+              var pattern = /^\d{6}$/;
+      
+              // Check if the field matches the pattern
+              return pattern.test(field);
+          }
+      
+          function validateInput() {
+              var inputField = document.getElementById("myInputField");
+              var inputValue = inputField.value;
+      
+              var validationResultDiv = document.getElementById("validationResult");
+      
+              if (validateSixDigits(inputValue)) {
+                  validationResultDiv.textContent = "Valid";
+              } else {
+                  validationResultDiv.textContent = "Invalid: The field does not contain six digits.";
+              }
+          }
+
+
+$(document).on("click","#saveNewItem",function(){
+    var name = $("#nameInput").val();
+    var type = $("input[name='itemType']:checked").val();
+    var unit = $("#selunit").val();
+    var hsn = $("#myInputField").val();
+    var purAccount = $("#myaccount").val();
+    var trck;
+    if($('#trackInv').prop('checked')){
+        trck = 1
+    }else{
+        trck = 0
+    }
+    if(type == undefined){
+        alert('Please select item type')
+        return
+    }
+    if($('#gridRadios3').prop('checked') || $('#gridRadios4').prop('checked')){
+        if($('#gridRadios3').prop('checked')){
+            var tax = 'taxable'
+        }else{
+            var tax = 'None-Taxable'
+        }
+    }else{
+        alert("Should select any of tax reference")
+        return
+    }
+
+    if (name !="" && type !="" && unit != "" && hsn != "" && tax != "" && purAccount != ""){
+        $.ajax({
+            type : 'POST',
+            url:"{% url 'createNewItemAjax' %}",
+            data:{
+                'name' : name,
+                'type' : type,
+                'unit' : unit,
+                'hsn' : hsn,
+                'taxref' : tax,
+                'intra_st' : $("#intraStateTax").val(),
+                'inter_st' : $("#interStateTax").val(),
+                'pcost' : $("#purprice").val(),
+                'pur_account' : purAccount,
+                'pur_desc' : $("#purchaseDescription").val(),
+                'salesprice' : $("#salesprice").val(),
+                'sale_account' : $("#salesAccount").val(),
+                'sale_desc' : $("#salesDescription").val(),
+                'invacc' : $("#invAcc").val(),
+                'stock' : $("#stockOnHand").val(),
+                'stock_rate' : $("#stockRate").val(),
+                'min_stock' : $("#minStock").val(),
+                'trackInv' : trck,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            
+            success: function(response) {
+                if(response.status){
+                    console.log("AJAX Success",response)
+                    document.getElementById("newItemForm").reset();
+
+                    if($('#newItem').hasClass('show')){
+                        $('#newItem .close_item_modal').click()
+                    }
+                    reloadItems();
+                }else{
+                    alert(response.message)
+                }
+            },         
+        });
+    }
+    else{
+        alert('Fill all required fields.!')
+        return;
+    }
+});
+
+function reloadItems() {
+    $.ajax({
+        url: "{% url 'getAllItemsAjax' %}",
+        type: "GET",
+        dataType: "json",
+        data: {},
+        csrfmiddlewaretoken: '{{ csrf_token }}',
+
+        success: function(data) {
+            $('#items-table-body tr').each(function () {
+                var currentRow = $(this);
+                var html = currentRow.html();
+                
+                if (html !== '') {
+                    currentRow.find(".items-available").find("li").remove();
+
+                    $.each(data, function(key, value) {
+                        console.log(value[1]);
+                        currentRow.find(".items-available").append(`<li class="dropdown-item items-options text-white" onclick="getItemDetails($(this).parent().prev().attr('id'),'${value[1]}')">${value[1]}</li>`);
+                    });
+                }
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error(xhr.responseText);
+        }
+
+    });
+    if ($('#newAccount').hasClass('show')){
+        $('#newAccount .close_account_modal').click();
+    }
+
+    if ($('#unitmodal').hasClass('show')){
+        $('#unitmodal .close_unit_modal').click();
+    }
+}
+
+      $(document).on("click","#newAccountSave",function(){
+            event.preventDefault();
+
+            var acType = $("#soValue1").val();
+            var acName = $("#account_name").val();
+            var acCode = $("#account_code").val();
+            var acDesc = $("#description").val();
+            var accNumber = $('#account_number').val();
+            var subAcc, parentAcc;
+            if(acType == "" || acName == ""){
+                alert('Account Name and Type should be entered.')
+                return
+            }
+
+            if(acType == 'Bank' && accNumber == ""){
+                alert('Please enter account number')
+                return
+            }
+
+            if($('#sub_account').prop('checked')){
+                if($('#parent_account').val() == ""){
+                    alert('Select parent account')
+                    return
+                }else{
+                    console.log('currentvalue == ',$('#parent_account').val())
+                    subAcc = $('#sub_account').val()
+                    parentAcc = $('#parent_account').val()
+                }
+            }else if($('#sub_account22').prop('checked')){
+
+                if($('#parent_account22').val() == ""){
+                    alert('Select parent account')
+                    return
+                }else{
+                    subAcc = $('#sub_account22').val()
+                    parentAcc = $('#parent_account22').val()
+                }
+            }else if($('#sub_account33').prop('checked')){
+
+                if($('#parent_account33').val() == ""){
+                    alert('Select parent account')
+                    return
+                }else{
+                    subAcc = $('#sub_account33').val()
+                    parentAcc = $('#parent_account33').val()
+                }
+            }else if($('#sub_account44').prop('checked')){
+
+                if($('#parent_account44').val() == ""){
+                    alert('Select parent account')
+                    return
+                }else{
+                    subAcc = $('#sub_account44').val()
+                    parentAcc = $('#parent_account44').val()
+                }
+            }else if($('#sub_account55').prop('checked')){
+
+                if($('#parent_account55').val() == ""){
+                    alert('Select parent account')
+                    return
+                }else{
+                    subAcc = $('#sub_account55').val()
+                    parentAcc = $('#parent_account55').val()
+                }
+            }else if($('#sub_account66').prop('checked')){
+                if($('#parent_account66').val() == ""){
+                    alert('Select parent account')
+                    return
+                }else{
+                    subAcc = $('#sub_account66').val()
+                    parentAcc = $('#parent_account66').val()
+                }
+
+            }else if($('#sub_account77').prop('checked')){
+                if($('#parent_account77').val() == ""){
+                    alert('Select parent account')
+                    return
+                }else{
+                    subAcc = $('#sub_account77').val()
+                    parentAcc = $('#parent_account77').val()
+                }
+
+            }else if($('#sub_account88').prop('checked')){
+                if($('#sub_account88').prop('checked') && $('#parent_account88').val() == ""){
+                    alert('Select parent account')
+                    return
+                }else{
+                    subAcc = $('#sub_account88').val()
+                    parentAcc = $('#parent_account88').val()
+                }
+
+            }else if($('#sub_account99').prop('checked')){
+                if($('#parent_account99').val() == ""){
+                    alert('Select parent account')
+                    return
+                }else{
+                    subAcc = $('#sub_account99').val()
+                    parentAcc = $('#parent_account99').val()
+                }
+
+            }else if($('#sub_account100').prop('checked')){
+                if($('#parent_account100').val() == ""){
+                    alert('Select parent account')
+                    return
+                }else{
+                    subAcc = $('#sub_account100').val()
+                    parentAcc = $('#parent_account100').val()
+                }
+
+            }else if($('#sub_account111').prop('checked')){
+                if($('#parent_account111').val() == ""){
+                    alert('Select parent account')
+                    return
+                }else{
+                    subAcc = $('#sub_account111').val()
+                    parentAcc = $('#parent_account111').val()
+                }
+
+            }else if($('#sub_account222').prop('checked')){
+                if($('#parent_account222').val() == ""){
+                    alert('Select parent account')
+                    return
+                }else{
+                    subAcc = $('#sub_account222').val()
+                    parentAcc = $('#parent_account222').val()
+                }
+
+            }else{
+
+            }
+
+
+
+            console.log(acType, acName, acCode, acDesc)
+            console.log('sub', subAcc)
+            console.log('parent', parentAcc)
+
+          $.ajax({
+            
+            type : 'POST',
+            url:"{% url 'createNewAccountAjax' %}",
+        
+            data:{
+                
+                account_type : acType,
+                account_name : acName,
+                account_code : acCode,
+                description : acDesc,
+                account_number : accNumber,
+                
+                sub_acc : subAcc,
+                parent_acc : parentAcc,
+         
+         
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+                
+              },
+              success: function(response) {
+            if (response.status) {
+              document.getElementById("newAccountForm").reset();
+              if($('#newAccount').hasClass('show')){
+                    $("#newAccount .close_account_modal").click()
+                }
+                reloadAccounts(acName)
+            } else {
+              $("#error-message-container2").text("Account with the same name exists");
+            }
+          },
+      
+          });     
+        });
+        
+        
+        function reloadAccounts(account) {
+            $.ajax({
+                url: "{% url 'getAllAccountsAjax' %}",
+                type: "GET",
+                dataType: "json", 
+                data: {},
+                
+                success: function(data) {
+                    var acc = account
+                    var setVal = "";
+                    var selectize = $('#myaccount').selectize()[0].selectize;
+                    selectize.clearOptions();
+
+                    selectize.addOptionGroup('Expense', { label: "Expense" });
+                    selectize.addOptionGroup('Cost Of Goods Sold', { label: "Cost Of Goods Sold" });
+                    selectize.addOptionGroup('Other Expense', { label: "Other Expense" });
+
+                    $.each(data, function(key, value) {
+                        if(account == value[0]){
+                            setVal = value[0]
+                        }
+                        console.log(value[0],value[1])
+                        if(value[1] == 'Expense'){
+                            selectize.addOption({value:value[0],text:value[0], optgroup: 'Expense'});
+                        }else if(value[1] == 'Cost Of Goods Sold'){
+                            selectize.addOption({value:value[0],text:value[0], optgroup: 'Cost Of Goods Sold'});
+                        }else if(value[1] == 'Other Expense'){
+                            selectize.addOption({value:value[0],text:value[0], optgroup: 'Other Expense'});
+                        }else{
+
+                        }
+                    });
+                    selectize.refreshOptions();
+
+                    if(setVal != ""){
+                        selectize.setValue(setVal);
+                    }
+            
+                },
+                error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+            
+                }
+            });
+        }
+
+        function toggleBankAcc(){
+            var vals = document.getElementById('soValue1').value
+            var accountNumberField = document.getElementById("acc_bo_div");
+            if (vals === "Bank") {
+                accountNumberField.style.display = "block";
+            } else {
+                accountNumberField.style.display = "none";
+            }
+        }
+    function message() {
+        toggleBankAcc()
+
+        var vals = document.getElementById('soValue1').value
+        console.log(vals)
+        if (vals == "Other Assets") {
+            document.getElementById('message_hd').innerHTML = "Assets"
+            document.getElementById('message').innerHTML = "Track special assets like goodwill and other intangible assets"
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+            document.getElementById("cr_div").style.display = "none";
+
+        } else if (vals == "Other Current Assets") {
+            document.getElementById('message_hd').innerHTML = "Any short term asset that can be converted into cash or cash equivalents easily<ul style='list-style-type: disc;'><li>Prepaid expenses</li><li>Stocks and Mutual Funds</li></ul>";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("sub_account").checked = false;
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+            document.getElementById("sub_div").style.display = "block";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+
+            $('#message').append(
+                `Any short term asset that can be converted into cash or cash equivalents easily 
+          <ul><li>Prepaid expenses</li> <li>Stocks and Mutual Funds</li></ul>`
+            )
+
+        } else if (vals == "Cash") {
+            document.getElementById('message_hd').innerHTML = "Assets<br><br>To keep track of cash and other cash equivalents like petty cash, undeposited funds, etc.";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("sub_account22").checked = false;
+
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div22").style.display = "block";
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            $('#message').append(
+                `To keep track of cash and other cash equivalents like petty cash, undeposited funds, etc.`
+            )
+
+        } else if (vals == "Bank") {
+            document.getElementById('message_hd').innerHTML = "Assets<br><br>To keep track of bank accounts like Savings, Checking, and Money Market accounts.";
+
+            document.getElementById('').innerHTML = "Assets"
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("cr_div").style.display = "block";
+            document.getElementById("acc_bo_div").style.display = "block";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+
+
+            $('#message').append(
+                `To keep track of bank accounts like Savings, Checking, and Money Market accounts`
+            )
+
+        } else if (vals == "Fixed Asset") {
+            document.getElementById('message_hd').innerHTML = "Assets<br><br>Any long term investment or an asset that cannot be converted into cash easily like:<ul><li>Land and Buildings</li><li>Plant, Machinery and Equipment</li><li>Computers</li><li>Furniture</li></ul>";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("sub_account33").checked = false;
+
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div33").style.display = "block";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+            $('#message').append(
+                `Any long term investment or an asset that cannot be converted into cash easily like: 
+          <ul><li>Land and Buildings</li> <li>Plant, Machinery and Equipment</li> <li>Computers</li> <li>Furniture</li></ul>`
+            )
+
+        } else if (vals == "Stock") {
+            document.getElementById('message_hd').innerHTML = "Assets<br><br>To keep track of your inventory assets.";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("sub_account44").checked = false;
+
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+            document.getElementById("sub_div44").style.display = "block";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+
+
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+            document.getElementById("cr_div").style.display = "none";
+            $('#message').append(
+                `To keep track of your inventory assets.`
+            )
+
+        } else if (vals == "Payment Clearing") {
+            document.getElementById('message_hd').innerHTML = "Assets<br><br>To keep track of funds moving in and out via payment processors like Stripe, PayPal, etc.";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+            $('#message').append(
+                `To keep track of funds moving in and out via payment processors like Stripe, PayPal, etc.`
+            )
+
+        } else if (vals == "Other Current Liability") {
+            document.getElementById('message_hd').innerHTML = "Liability<br><br>Any short term liability like:<ul><li>Customer Deposits</li><li>Tax Payable</li></ul>";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("sub_account55").checked = false;
+
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "block";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+
+            $('#message').append(
+                `Any short term liability like:
+          <ul><li>Customer Deposits</li> <li>Tax Payable</li></ul>`
+            )
+
+        } else if (vals == "Credit Card") {
+            document.getElementById('message_hd').innerHTML = "Liability<br><br>Create a trail of all your credit card transactions by creating a credit card account.";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("cr_div").style.display = "block";
+            document.getElementById("acc_bo_div").style.display = "none";
+
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+
+            $('#message').append(
+                `Create a trail of all your credit card transactions by creating a credit card account`
+            )
+
+        } else if (vals == "Long Term Liability") {
+            document.getElementById('message_hd').innerHTML = "Liability<br><br>Liabilities that mature after a minimum period of one year like:<ul><li>Notes Payable</li><li>Debentures</li><li>Long Term Loans</li></ul>";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("sub_account66").checked = false;
+
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("sub_div66").style.display = "block";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+
+
+            document.getElementById("acc_bo_div").style.display = "none";
+
+            $('#message').append(
+                `Liabilities that mature after a minimum period of one year like Notes Payable, Debentures, and Long Term Loans`
+            )
+
+        } else if (vals == "Other Liability") {
+            document.getElementById('message_hd').innerHTML = "Liability<br><br>Obligation of an entity arising from past transactions or events which would require repayment.<ul><li>Tax to be paid</li><li>Loan to be Repaid</li><li>Accounts Payable</li> etc.</ul>";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("sub_account77").checked = false;
+
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div77").style.display = "block";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+
+
+            $('#message').append(
+                `Obligation of an entity arising from past transactions or events which would require repayment.<ul><li>Tax to be paid</li> <li>Loan to be Repaid</li> <li>Accounts Payable etc</li> </ul>`
+            )
+
+        } else if (vals == "Overseas Tax Payable") {
+            document.getElementById('message_hd').innerHTML = "Liability<br><br>Track your taxes in this account if your business sells digital services to foreign customers.";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+
+
+            $('#message').append(
+                `Track your taxes in this account if your business sells digital services to foreign customers.`
+            )
+
+        } else if (vals == "Equity") {
+            document.getElementById('message_hd').innerHTML = "Equity<br><br>Owners or stakeholders interest on the assets of the business after deducting all the liabilities.";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("sub_account88").checked = false;
+
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "block";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+
+            document.getElementById("acc_bo_div").style.display = "none";
+
+            $('#message').append(
+                `Owners or stakeholders interest on the assets of the business after deducting all the liabilities`
+            )
+
+        } else if (vals == "Income") {
+            document.getElementById('message_hd').innerHTML = "Income<br><br>Income or Revenue earned from normal business activities like sale of goods and services to customers.";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("sub_account99").checked = false;
+
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "block";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+
+
+            document.getElementById("acc_bo_div").style.display = "none";
+
+            $('#message').append(
+                `Income or Revenue earned from normal business activities like sale of goods and services to customers`
+            )
+
+        } else if (vals == "Other Income") {
+            document.getElementById('message_hd').innerHTML = "Income<br><br>Income or revenue earned from activities not directly related to your business like :<ul><li>Interest Earned</li><li>Dividend Earned</li></ul>";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+
+            $('#message').append(
+                `Income or revenue earned from activties not directly related to your business like :<ul><li>Interest Earned</li> <li>Dividend Earned</li></ul>`
+            )
+
+        } else if (vals == "Expense") {
+            document.getElementById('message_hd').innerHTML = "Expense<br><br>Reflects expenses incurred for running normal business operations, such as :<ul><li>Advertisements and Marketing</li><li>Business Travel Expenses</li><li>License Fees</li><li>Utility Expenses</li></ul>";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("sub_account100").checked = false;
+
+
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div100").style.display = "block";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+
+            $('#message').append(
+                `Reflects expenses incurred for running normal business operations, such as :<ul><li>Advertisements and Marketing</li> <li>Business Travel Expenses</li><li>License Fees</li><li>Utility Expenses</li></ul>`
+            )
+
+        } else if (vals == "Cost Of Goods Sold") {
+            document.getElementById('message_hd').innerHTML = "Expense<br><br>This indicates the direct costs attributable to the production of the goods sold by a company such as:<ul><li>Material and Labor costs</li><li>Cost of obtaining raw materials</li></ul>";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("sub_account111").checked = false;
+
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div222").style.display = "none";
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div111").style.display = "block";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+            document.getElementById("sub_div222").style.display = "none";
+
+            $('#message').append(
+                `This indicates the direct costs attributable to the production of the goods sold by a company such as:<ul><li>Material and Labor costs</li> <li>Cost of obtaining raw materials</li></ul>`
+            )
+
+        } else if (vals == "Other Expense") {
+            document.getElementById('message_hd').innerHTML = "Expense<br><br>Track miscellaneous expenses incurred for activities other than primary business operations or create additional accounts to track default expenses like insurance or contribution towards charity.";
+
+            document.getElementById('message').innerHTML = ""
+            document.getElementById("sub_account222").checked = false;
+
+            document.getElementById("cr_div").style.display = "none";
+            document.getElementById("name").style.display = "block";
+            document.getElementById("credit").style.display = "none";
+            document.getElementById("acc_bo_div").style.display = "none";
+            document.getElementById("parent_div").style.display = "none";
+            document.getElementById("parent_div22").style.display = "none";
+            document.getElementById("parent_div33").style.display = "none";
+            document.getElementById("parent_div44").style.display = "none";
+            document.getElementById("parent_div55").style.display = "none";
+            document.getElementById("parent_div66").style.display = "none";
+            document.getElementById("parent_div77").style.display = "none";
+            document.getElementById("parent_div88").style.display = "none";
+            document.getElementById("parent_div99").style.display = "none";
+            document.getElementById("parent_div100").style.display = "none";
+            document.getElementById("parent_div111").style.display = "none";
+
+            document.getElementById("sub_div").style.display = "none";
+            document.getElementById("sub_div22").style.display = "none";
+            document.getElementById("sub_div33").style.display = "none";
+            document.getElementById("sub_div44").style.display = "none";
+            document.getElementById("sub_div55").style.display = "none";
+            document.getElementById("sub_div66").style.display = "none";
+            document.getElementById("sub_div77").style.display = "none";
+            document.getElementById("sub_div88").style.display = "none";
+            document.getElementById("sub_div222").style.display = "block";
+            document.getElementById("sub_div100").style.display = "none";
+            document.getElementById("sub_div111").style.display = "none";
+            document.getElementById("sub_div99").style.display = "none";
+
+            $('#message').append(
+                `Reflects expenses incurred for activities unrelated to primary business operations like :<ul><li>Bad debts</li> <li>Contributions Towards Charity</li><li>Insurance</li></ul>`
+            )
+
+        }
+
+
+
+
+    };
+
+    function filterFunction1() {
+        var input, filter, ul, li, a, i, b, j;
+        input = document.getElementById("myInput1");
+        filter = input.value.toUpperCase();
+        div = document.getElementById("myDropdown1");
+        a = div.getElementsByClassName('opt');
+        // a = div.getElementsByTagName('div');
+
+        b = div.getElementsByTagName('li');
+
+        for (i = 0; i < a.length; i++) {
+            txtValue = a[i].textContent || a[i].innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                a[i].style.display = "";
+            }
+            else {
+                a[i].style.display = "none";
+            }
+        }
+        for (j = 0; j < b.length; j++) {
+            txtValue = b[j].textContent || b[j].innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                b[j].style.display = "";
+            }
+            else {
+                b[j].style.display = "none";
+            }
+        }
+
+    }
+
+    function show_parent() {
+
+var vals = document.getElementById('soValue1').value;
+console.log(vals);
+if (vals == "Other Current Assets") {
+
+    var chk = document.getElementById("sub_account").checked;
+
+
+    if (chk == true) {
+        document.getElementById("parent_div").style.display = "block";
+        document.getElementById("parent_div22").style.display = "none";
+        document.getElementById("parent_div33").style.display = "none";
+        document.getElementById("parent_div44").style.display = "none";
+        document.getElementById("parent_div55").style.display = "none";
+        document.getElementById("parent_div66").style.display = "none";
+        document.getElementById("parent_div77").style.display = "none";
+        document.getElementById("parent_div88").style.display = "none";
+        document.getElementById("parent_div99").style.display = "none";
+        document.getElementById("parent_div100").style.display = "none";
+        document.getElementById("parent_div111").style.display = "none";
+        document.getElementById("parent_div222").style.display = "none";
+
+
+
+    } else {
+        document.getElementById("parent_div").style.display = "none";
+    }
+}
+}
+
+function show_parent22() {
+var vals = document.getElementById('soValue1').value;
+console.log(vals);
+
+if (vals == "Cash") {
+    var chk = document.getElementById("sub_account22").checked;
+    if (chk == true) {
+        document.getElementById("parent_div22").style.display = "block";
+        document.getElementById("parent_div55").style.display = "none";
+        document.getElementById("parent_div44").style.display = "none";
+        document.getElementById("parent_div33").style.display = "none";
+        document.getElementById("parent_div").style.display = "none";
+        document.getElementById("parent_div66").style.display = "none";
+        document.getElementById("parent_div77").style.display = "none";
+        document.getElementById("parent_div88").style.display = "none";
+        document.getElementById("parent_div99").style.display = "none";
+        document.getElementById("parent_div100").style.display = "none";
+        document.getElementById("parent_div111").style.display = "none";
+        document.getElementById("parent_div222").style.display = "none";
+    }
+    else {
+        document.getElementById("parent_div22").style.display = "none";
+    }
+}
+
+}
+
+function show_parent33() {
+var vals = document.getElementById('soValue1').value;
+console.log(vals);
+
+if (vals == "Fixed Asset") {
+    var chk1 = document.getElementById("sub_account33").checked;
+    if (chk1 == true) {
+        document.getElementById("parent_div33").style.display = "block";
+        document.getElementById("parent_div55").style.display = "none";
+        document.getElementById("parent_div44").style.display = "none";
+        document.getElementById("parent_div22").style.display = "none";
+        document.getElementById("parent_div").style.display = "none";
+        document.getElementById("parent_div66").style.display = "none";
+        document.getElementById("parent_div77").style.display = "none";
+        document.getElementById("parent_div88").style.display = "none";
+        document.getElementById("parent_div99").style.display = "none";
+        document.getElementById("parent_div100").style.display = "none";
+        document.getElementById("parent_div111").style.display = "none";
+        document.getElementById("parent_div222").style.display = "none";
+
+    }
+    else {
+        document.getElementById("parent_div33").style.display = "none";
+    }
+}
+
+}
+
+function show_parent44() {
+
+var vals = document.getElementById('soValue1').value;
+console.log(vals);
+
+if (vals == "Stock") {
+    var chk = document.getElementById("sub_account44").checked
+    if (chk == true) {
+        document.getElementById("parent_div66").style.display = "none";
+        document.getElementById("parent_div44").style.display = "block";
+        document.getElementById("parent_div55").style.display = "none";
+        document.getElementById("parent_div33").style.display = "none";
+        document.getElementById("parent_div22").style.display = "none";
+        document.getElementById("parent_div").style.display = "none";
+        document.getElementById("parent_div77").style.display = "none";
+        document.getElementById("parent_div88").style.display = "none";
+        document.getElementById("parent_div99").style.display = "none";
+        document.getElementById("parent_div100").style.display = "none";
+        document.getElementById("parent_div111").style.display = "none";
+        document.getElementById("parent_div222").style.display = "none";
+
+    } else {
+        document.getElementById("parent_div44").style.display = "none";
+    }
+}
+}
+
+
+function show_parent55() {
+var vals = document.getElementById('soValue1').value;
+console.log(vals);
+if (vals == "Other Current Liability") {
+    var chk = document.getElementById("sub_account55").checked
+    if (chk == true) {
+        document.getElementById("parent_div55").style.display = "block";
+        document.getElementById("parent_div44").style.display = "none";
+        document.getElementById("parent_div33").style.display = "none";
+        document.getElementById("parent_div22").style.display = "none";
+        document.getElementById("parent_div").style.display = "none";
+        document.getElementById("parent_div66").style.display = "none";
+        document.getElementById("parent_div77").style.display = "none";
+        document.getElementById("parent_div88").style.display = "none";
+        document.getElementById("parent_div99").style.display = "none";
+        document.getElementById("parent_div100").style.display = "none";
+        document.getElementById("parent_div111").style.display = "none";
+        document.getElementById("parent_div222").style.display = "none";
+    } else {
+        document.getElementById("parent_div55").style.display = "none";
+    }
+}
+}
+
+function show_parent66() {
+var vals = document.getElementById('soValue1').value;
+console.log(vals);
+if (vals == "Long Term Liability") {
+    var chk = document.getElementById("sub_account66").checked
+    if (chk == true) {
+        document.getElementById("parent_div66").style.display = "block";
+        document.getElementById("parent_div44").style.display = "none";
+        document.getElementById("parent_div33").style.display = "none";
+        document.getElementById("parent_div22").style.display = "none";
+        document.getElementById("parent_div").style.display = "none";
+        document.getElementById("parent_div55").style.display = "none";
+        document.getElementById("parent_div77").style.display = "none";
+        document.getElementById("parent_div88").style.display = "none";
+        document.getElementById("parent_div99").style.display = "none";
+        document.getElementById("parent_div100").style.display = "none";
+        document.getElementById("parent_div111").style.display = "none";
+        document.getElementById("parent_div222").style.display = "none";
+    } else {
+        document.getElementById("parent_div66").style.display = "none";
+    }
+}
+}
+
+function show_parent77() {
+var vals = document.getElementById('soValue1').value;
+console.log(vals);
+if (vals == "Other Liability") {
+    var chk = document.getElementById("sub_account77").checked
+    if (chk == true) {
+        document.getElementById("parent_div77").style.display = "block";
+        document.getElementById("parent_div44").style.display = "none";
+        document.getElementById("parent_div33").style.display = "none";
+        document.getElementById("parent_div22").style.display = "none";
+        document.getElementById("parent_div").style.display = "none";
+        document.getElementById("parent_div55").style.display = "none";
+        document.getElementById("parent_div66").style.display = "none";
+        document.getElementById("parent_div88").style.display = "none";
+        document.getElementById("parent_div99").style.display = "none";
+        document.getElementById("parent_div100").style.display = "none";
+        document.getElementById("parent_div111").style.display = "none";
+        document.getElementById("parent_div222").style.display = "none";
+    } else {
+        document.getElementById("parent_div77").style.display = "none";
+    }
+}
+}
+
+function show_parent88() {
+var vals = document.getElementById('soValue1').value;
+console.log(vals);
+if (vals == "Equity") {
+    var chk = document.getElementById("sub_account88").checked
+    if (chk == true) {
+        document.getElementById("parent_div88").style.display = "block";
+        document.getElementById("parent_div44").style.display = "none";
+        document.getElementById("parent_div33").style.display = "none";
+        document.getElementById("parent_div22").style.display = "none";
+        document.getElementById("parent_div").style.display = "none";
+        document.getElementById("parent_div55").style.display = "none";
+        document.getElementById("parent_div66").style.display = "none";
+        document.getElementById("parent_div77").style.display = "none";
+        document.getElementById("parent_div99").style.display = "none";
+        document.getElementById("parent_div100").style.display = "none";
+        document.getElementById("parent_div111").style.display = "none";
+        document.getElementById("parent_div222").style.display = "none";
+    } else {
+        document.getElementById("parent_div88").style.display = "none";
+    }
+}
+}
+
+function show_parent99() {
+var vals = document.getElementById('soValue1').value;
+console.log(vals);
+if (vals == "Income") {
+    var chk = document.getElementById("sub_account99").checked
+    if (chk == true) {
+        document.getElementById("parent_div99").style.display = "block";
+        document.getElementById("parent_div44").style.display = "none";
+        document.getElementById("parent_div33").style.display = "none";
+        document.getElementById("parent_div22").style.display = "none";
+        document.getElementById("parent_div").style.display = "none";
+        document.getElementById("parent_div55").style.display = "none";
+        document.getElementById("parent_div66").style.display = "none";
+        document.getElementById("parent_div77").style.display = "none";
+        document.getElementById("parent_div88").style.display = "none";
+        document.getElementById("parent_div100").style.display = "none";
+        document.getElementById("parent_div111").style.display = "none";
+        document.getElementById("parent_div222").style.display = "none";
+    } else {
+        document.getElementById("parent_div99").style.display = "none";
+    }
+}
+}
+
+function show_parent100() {
+var vals = document.getElementById('soValue1').value;
+console.log(vals);
+
+if (vals == "Expense") {
+    var chk = document.getElementById("sub_account100").checked;
+    if (chk == true) {
+        document.getElementById("parent_div100").style.display = "block";
+        document.getElementById("parent_div66").style.display = "none";
+        document.getElementById("parent_div99").style.display = "none";
+        document.getElementById("parent_div55").style.display = "none";
+        document.getElementById("parent_div44").style.display = "none";
+        document.getElementById("parent_div33").style.display = "none";
+        document.getElementById("parent_div22").style.display = "none";
+        document.getElementById("parent_div").style.display = "none";
+        document.getElementById("parent_div77").style.display = "none";
+        document.getElementById("parent_div88").style.display = "none";
+        document.getElementById("parent_div111").style.display = "none";
+        document.getElementById("parent_div222").style.display = "none";
+
+
+    } else {
+        document.getElementById("parent_div100").style.display = "none";
+    }
+}
+}
+
+function show_parent111() {
+var vals = document.getElementById('soValue1').value;
+console.log(vals);
+
+
+if (vals == "Cost Of Goods Sold") {
+    var chk = document.getElementById("sub_account111").checked
+    if (chk == true) {
+        document.getElementById("parent_div111").style.display = "block";
+        document.getElementById("parent_div66").style.display = "none";
+        document.getElementById("parent_div99").style.display = "none";
+        document.getElementById("parent_div55").style.display = "none";
+        document.getElementById("parent_div44").style.display = "none";
+        document.getElementById("parent_div33").style.display = "none";
+        document.getElementById("parent_div22").style.display = "none";
+        document.getElementById("parent_div").style.display = "none";
+        document.getElementById("parent_div77").style.display = "none";
+        document.getElementById("parent_div88").style.display = "none";
+        document.getElementById("parent_div100").style.display = "none";
+        document.getElementById("parent_div222").style.display = "none";
+
+
+    } else {
+        document.getElementById("parent_div111").style.display = "none";
+    }
+}
+}
+
+function show_parent222() {
+var vals = document.getElementById('soValue1').value;
+console.log(vals);
+
+if (vals == "Other Expense") {
+    var chk = document.getElementById("sub_account222").checked;
+    if (chk == true) {
+        document.getElementById("parent_div222").style.display = "block";
+        document.getElementById("parent_div66").style.display = "none";
+        document.getElementById("parent_div99").style.display = "none";
+        document.getElementById("parent_div55").style.display = "none";
+        document.getElementById("parent_div44").style.display = "none";
+        document.getElementById("parent_div33").style.display = "none";
+        document.getElementById("parent_div22").style.display = "none";
+        document.getElementById("parent_div").style.display = "none";
+        document.getElementById("parent_div77").style.display = "none";
+        document.getElementById("parent_div88").style.display = "none";
+        document.getElementById("parent_div100").style.display = "none";
+        document.getElementById("parent_div111").style.display = "none";
+
+
+    } else {
+        document.getElementById("parent_div222").style.display = "none";
+    }
+}
+}
+</script>                
                         
                         
                         
