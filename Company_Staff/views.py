@@ -28354,7 +28354,7 @@ def create_eway_bill(request):
         
 
         context = {
-            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'customers': cust,'items':itms,'units':units
+            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'customers': cust,'items':itms,'units':units,'accounts':accounts
             
         }
         return render(request, 'zohomodules/eway_bills/create_eway_bill.html', context)
