@@ -28349,12 +28349,12 @@ def create_eway_bill(request):
         cust = Customer.objects.filter(company = cmp, customer_status = 'Active')
         units = Unit.objects.filter(company=cmp)
         accounts=Chart_of_Accounts.objects.filter(company=cmp)
-        
+        trm = Company_Payment_Term.objects.filter(company = cmp)
         itms = Items.objects.filter(company = cmp, activation_tag = 'active')
         
 
         context = {
-            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'customers': cust,'items':itms,'units':units,'accounts':accounts
+            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'customers': cust,'items':itms,'units':units,'accounts':accounts,'pTerms':trm,
             
         }
         return render(request, 'zohomodules/eway_bills/create_eway_bill.html', context)
