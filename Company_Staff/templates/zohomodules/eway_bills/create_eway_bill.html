@@ -427,18 +427,107 @@
                 </script>
 
                 <hr>
-                <div class="row mt-2" id="billAddressSection">
-                    <label for="" class="col-md-3 labels">E Way Billing Address</label>
-                    <div class="col-md-6">
-                      <textarea class="form-control text-white bg-black" name="bill_address" id="billAddress" rows="4"></textarea>
-                    </div>
-                  </div>
-                    <div class="row mt-2">
+
+                <!-- HTML template -->
+<div class="col-12 col-md-10 mt-2">
+    <label class="col-12 col-md-4 labels" style="color: aliceblue;">Transaction Type</label>
+    <div class="form-check form-check-inline">
+        <input required class="form-check-input" type="radio" name="itemType" id="gridRadios1" value="Goods">
+        <label class="form-check-label text-white" for="gridRadios1">Goods</label>
+    </div> &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
+    <div class="form-check form-check-inline ml-md-3">
+        <input required class="form-check-input" type="radio" name="itemType" id="gridRadios2" value="Services">
+        <label class="form-check-label text-white" for="gridRadios2">Services</label>
+    </div>
+</div>
+
+<!-- Input field for HSN number -->
+<div class="row mt-2">
+    <div class="col-md-6">
+        <div id="hsnNumberField" style="display: none;">
+            <input style="margin-left: 290px;" type="text" class="form-control text-white bg-black" name="hsnNumber" placeholder="Enter HSN Number">
+        </div>
+    </div>
+</div>
+
+
+<!-- Input field for SAC number -->
+<div class="row">
+<div class="col-md-6">
+    <div id="sacNumberField" style="display: none;">
+        <input style="margin-left: 290px;" type="text" class="form-control text-white bg-black" name="sacNumber" placeholder="Enter SAC Number">
+    </div>
+</div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('input[type=radio][name=itemType]').change(function () {
+            if (this.value === 'Goods') {
+                $('#hsnNumberField').show();
+                $('#sacNumberField').hide();
+            } else if (this.value === 'Services') {
+                $('#hsnNumberField').hide();
+                $('#sacNumberField').show();
+            }
+        });
+    });
+</script>
+
+                  
+
+<div class="row mt-4">
+    <label for="" class="col-md-3 labels">E Way Billing Address</label>
+    <div class="col-md-6">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="additionalAddressCheckbox">
+            <label class="form-check-label text-white" for="additionalAddressCheckbox">
+                Do you want to enter another billing address?
+            </label>
+        </div>
+    </div>
+</div>
+
+<div id="additionalAddressSection" style="display: none;">
+    <!-- Additional billing address fields -->
+    <div class="row mt-2">
+        <label for="" class="col-md-3 labels">New Billing Address</label>
+        <div class="col-md-6">
+            <textarea class="form-control text-white bg-black" name="additional_bill_address" rows="4"></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#additionalAddressCheckbox').change(function () {
+            if ($(this).is(':checked')) {
+                $('#additionalAddressSection').show();
+            } else {
+                $('#additionalAddressSection').hide();
+            }
+        });
+    });
+</script>
+
+                    <div class="row mt-4">
                       <label for="" class="col-md-3 labels">E Way Bill No.</label>
                       <div class="col-md-6">
                         <input type="text" class="form-control bg-black text-white" name="reference_number" value="" readonly>
                       </div>
                     </div>
+
+
+                    
+                        <div class="row mt-2">
+                          <label for="" class="col-md-3 labels">Reference No.</label>
+                          <div class="col-md-6">
+                            <input type="text" class="form-control bg-black text-white" name="reference_number" value="{{ref_no}}" readonly>
+                          </div>
+                        </div>
+
+                      
                   
                   <div class="row mt-2">
                     <div class="col-md-12 mt-2">
@@ -483,16 +572,7 @@
                               </div>
                             </div>
                         </div>
-                        <div class="row mt-2">
-                            <div class="col-md-12 mt-2">
-                              <div class="row">
-                                <label for="" class="col-md-3 labels">Description</label>
-                                <div class="col-md-6">
-                                  <input type="text" class="form-control bg-black text-white" id="" name="" value="">
-                                </div>
-                              </div>
-                            </div>
-                        </div>
+                        
 
                         <div class="row mt-4">
                             <div class="col-12 table-responsive">
@@ -877,20 +957,6 @@ function refreshTax(){
 </div>
 <div class="row">
   <div class="col-md-7"></div>
-  <div class="col-md-5 table-responsive-md mt-3 " id="invoiceItemsTablePaid" style="background-color:rgba(0,0,0,.4); border: 1px solid rgba(128, 128, 128, 0.6); margin-left: -2vh;">
-      <div class="p-3">
-          <div class="row container-fluid p-2 m-0">
-              <div class="col-sm-4 mt-2"><label for="a" class="text-center text-white">Paid Off</label></div>
-              <div class="col-sm-1 mt-2">:</div>
-              <div class="col-sm-7 mt-2"><input type="number" step="any" name='advance' id="advance"  value=0.00 class="form-control bg-black text-white"/></div>
-          </div>
-          <div class="row container-fluid p-2 m-0">
-              <div class="col-sm-4 mt-2"><label for="a" class="text-center text-white">Balance</label></div>
-              <div class="col-sm-1 mt-2">:</div>
-              <div class="col-sm-7 mt-2"><input type="number" name='balance' id="balance" value=0.00 readonly class="form-control bg-black text-white" readonly /></div>
-          </div>
-      </div>
-  </div>
 </div>
   
 
@@ -907,7 +973,6 @@ function refreshTax(){
   </div>
   <div class="mt-4">
     <input type="submit" class="btn save_btn" style="background-color: chocolate; color: white;" value="SAVE" name="Saved" id="save">
-    <input class="btn save_btn" style="background-color: chocolate; color: white;" type="submit" value="DRAFT" name="Draft" id="draft">
     <input class="btn save_btn" style="background-color: chocolate; color: white;" type="reset" onclick="window.location.href=`{% url 'recurringInvoice' %}`" value="CANCEL" id="cancel">
   </div>
 </form>

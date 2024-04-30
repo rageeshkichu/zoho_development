@@ -1727,3 +1727,65 @@ class RetainerInvoiceHistory(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     action = models.CharField(max_length=100, default='')  # Provide a default value here
     # Add any other fields as needed
+
+
+
+class EwayBill(models.Model):
+    company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE,null=True)
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True)
+    document_type = models.CharField(max_length=100, null=True, blank=True)
+    transaction_sub_type = models.CharField(max_length=100, null=True, blank=True)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE,null=True)
+    customer_email = models.EmailField(max_length=100, null=True, blank=True)
+    billing_address = models.TextField(null=True, blank=True)
+    gst_type = models.CharField(max_length=100, null=True, blank=True)
+    gstin = models.CharField(max_length=100, null=True, blank=True)
+    place_of_supply = models.CharField(max_length=100, null=True, blank=True)
+    eway_billing_address = models.CharField(max_length=100, null=True, blank=True)
+    eway_bill_number = models.CharField(max_length=100, null=True, blank=True)
+    reference_no = models.BigIntegerField(null=True, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    transaction_type = models.CharField(max_length=100, null=True, blank=True)
+    transportation = models.CharField(max_length=100, null=True, blank=True)
+    kilometers = models.CharField(max_length=100, null=True, blank=True)
+    vehicle_number = models.CharField(max_length=100, null=True, blank=True)
+    description = models.CharField(max_length=100, null=True, blank=True)
+    document=models.FileField(upload_to="images/",null=True)
+    subtotal = models.IntegerField(default=0, null=True)
+    igst = models.FloatField(default=0.0, null=True, blank=True)
+    cgst = models.FloatField(default=0.0, null=True, blank=True)
+    sgst = models.FloatField(default=0.0, null=True, blank=True)
+    tax_amount = models.FloatField(default=0.0, null=True, blank=True)
+    adjustment = models.FloatField(default=0.0, null=True, blank=True)
+    shipping_charge = models.FloatField(default=0.0, null=True, blank=True)
+    grandtotal = models.FloatField(default=0.0, null=True, blank=True)
+    
+    STATUS_CHOICES = [
+        ('Saved', 'Saved'),
+    ]
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+
+class Eway_bill_item(models.Model):
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    EwayBill = models.ForeignKey(EwayBill,on_delete=models.CASCADE,null=True,blank=True)
+    item=models.ForeignKey(Items, on_delete=models.CASCADE,null=True,blank=True)
+    hsn = models.CharField(max_length=200,null=True)
+    quantity = models.IntegerField(null=True)
+    price=  models.FloatField(default=0.0, null=True, blank=True)
+    tax_rate= models.FloatField(default=0.0, null=True, blank=True)
+    discount= models.FloatField(default=0.0, null=True, blank=True)
+    total =  models.FloatField(default=0.0, null=True, blank=True)
+
+class Eway_bill_Reference(models.Model):
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE,null=True,blank=True)
+    company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True,blank=True)
+    reference_number = models.BigIntegerField(null=True, blank=True)
+
+class EwayBillHistory(models.Model):
+    company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE)
+    login_details = models.ForeignKey(LoginDetails, on_delete=models.CASCADE)
+    EwayBill = models.ForeignKey(EwayBill, on_delete=models.CASCADE)
+    date = models.DateField(auto_now_add=True)
+    
+    action = models.CharField(max_length=20, null=True)
