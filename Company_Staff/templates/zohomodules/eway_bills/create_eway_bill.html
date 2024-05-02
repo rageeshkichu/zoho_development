@@ -251,13 +251,13 @@
             <div class="card mb-5 px-3 py-4" style="background-color: black; border-radius: 1vh;">
               <h1 class="mb-0 text-uppercase text-right" style="color: white; font-weight: bolder;">CREATE E WAY BILL</h1><br>
               <hr class="text-warning">
-              <form action="" method="post" enctype="multipart/form-data"id="myForm" onsubmit="return validateForm()">
+              <form action="{% url 'createEwayBill' %}" method="post" enctype="multipart/form-data"id="myForm" onsubmit="return validateForm()">
                 {% csrf_token %}
                 <div class="row">
                     <div class="row mt-2">
                         <label for="" class="col-md-3 labels">Document Type</label>
                         <div class="col-md-6">
-                            <select class="form-control text-white bg-black" id="" name="">
+                            <select class="form-control text-white bg-black" id="" name="document_type">
                                 <option hidden value="type1">select document type</option>
                                 <option value="invoices">Invoices</option>
                                 <option value="credit_notes">Credit Notes</option>
@@ -269,7 +269,7 @@
                     <div class="row mt-2">
                         <label for="" class="col-md-3 labels">Transaction Sub Type</label>
                         <div class="col-md-6">
-                            <select class="form-control text-white bg-black" id="" name="">
+                            <select class="form-control text-white bg-black" id="" name="transaction_sub_type">
                                 <option value="type1">select Transaction Sub type</option>
                                 <option value="supply">Supply</option>
                                 <option value="export">Export</option>
@@ -514,7 +514,7 @@
                     <div class="row mt-4">
                       <label for="" class="col-md-3 labels">E Way Bill No.</label>
                       <div class="col-md-6">
-                        <input type="text" class="form-control bg-black text-white" name="reference_number" value="" readonly>
+                        <input type="text" class="form-control bg-black text-white" name="EwayBill_no" value="" placeholder="">
                       </div>
                     </div>
 
@@ -523,7 +523,7 @@
                         <div class="row mt-2">
                           <label for="" class="col-md-3 labels">Reference No.</label>
                           <div class="col-md-6">
-                            <input type="text" class="form-control bg-black text-white" name="reference_number" value="{{ref_no}}" readonly>
+                            <input type="text" class="form-control bg-black text-white" name="reference_number" value="{{ref_no}}" required>
                           </div>
                         </div>
 
@@ -557,7 +557,7 @@
                               <div class="row">
                                 <label for="" class="col-md-3 labels">Kilometers</label>
                                 <div class="col-md-6">
-                                  <input type="text" class="form-control bg-black text-white" id="" name="" value="">
+                                  <input type="text" class="form-control bg-black text-white" id="" name="kilometers" value="">
                                 </div>
                               </div>
                             </div>
@@ -567,7 +567,7 @@
                               <div class="row">
                                 <label for="" class="col-md-3 labels">Vehicle Number</label>
                                 <div class="col-md-6">
-                                  <input type="text" class="form-control bg-black text-white" id="" name="" value="">
+                                  <input type="text" class="form-control bg-black text-white" id="" name="vehicle_number" value="">
                                 </div>
                               </div>
                             </div>
@@ -973,7 +973,7 @@ function refreshTax(){
   </div>
   <div class="mt-4">
     <input type="submit" class="btn save_btn" style="background-color: chocolate; color: white;" value="SAVE" name="Saved" id="save">
-    <input class="btn save_btn" style="background-color: chocolate; color: white;" type="reset" onclick="window.location.href=`{% url 'recurringInvoice' %}`" value="CANCEL" id="cancel">
+    <input class="btn save_btn" style="background-color: chocolate; color: white;" type="reset" onclick="window.location.href=`{% url 'eway_bills' %}`" value="CANCEL" id="cancel">
   </div>
 </form>
 </div>

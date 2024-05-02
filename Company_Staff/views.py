@@ -83,7 +83,7 @@ from django.shortcuts import render
 from .models import RetainerInvoice
 from .models import RetainerInvoice, Retaineritems
 from .models import RetainerInvoiceComment  # Import the RetainerInvoiceComment model
-from Company_Staff.models import Customer,Items
+from Company_Staff.models import Customer,Items,EwayBill,Eway_bill_item,EwayBillHistory,Eway_bill_Reference
 
 # Create your views here.
 
@@ -28316,20 +28316,24 @@ def eway_bills(request):
                 dash_details = StaffDetails.objects.get(login_details=log_details)
                 item=Items.objects.filter(company=dash_details.company)
                 allmodules= ZohoModules.objects.get(company=dash_details.company,status='New')
+                bills = EwayBill.objects.all()
                 context = {
                         'details': dash_details,
                         'item':item,
                         'allmodules': allmodules,
+                        'bills':bills
                 }
                 return render(request,'zohomodules/eway_bills/eway_bills.html',context)
         if log_details.user_type == 'Company':
             dash_details = CompanyDetails.objects.get(login_details=log_details)
             item=Items.objects.filter(company=dash_details)
             allmodules= ZohoModules.objects.get(company=dash_details,status='New')
+            
             context = {
                     'details': dash_details,
                     'item': item,
                     'allmodules': allmodules,
+                    
             }
 
             return render(request,'zohomodules/eway_bills/eway_bills.html',context)
@@ -28390,3 +28394,89 @@ def getItemDetailsAjax3(request):
         return JsonResponse(context)
     else:
        return redirect('/')
+
+
+def createEwayBill(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+        
+        if request.method == 'POST':
+            env = EwayBill(
+                company = com,
+                login_details = com.login_details,
+                customer = Customer.objects.get(id = request.POST['customerId']),
+                document_type = request.POST['document_type'],
+                transaction_sub_type = request.POST['transaction_sub_type'],
+                customer_email = request.POST['customer_email'],
+                eway_billing_address = request.POST['additional_bill_address'],
+                eway_bill_number = request.POST['EwayBill_no'],
+                reference_no = request.POST['reference_number'],
+                transaction_type = request.POST['itemType'],
+                transportation = request.POST['entry_type'],
+                kilometers = request.POST['kilometers'],
+                vehicle_number = request.POST['vehicle_number'],
+                gst_type = request.POST['customer_gst_type'],
+                gstin = request.POST['customer_gstin'],
+                place_of_supply = request.POST['place_of_supply'],
+                start_date = request.POST['start_date'],
+                subtotal = 0.0 if request.POST['subtotal'] == "" else float(request.POST['subtotal']),
+                igst = 0.0 if request.POST['igst'] == "" else float(request.POST['igst']),
+                cgst = 0.0 if request.POST['cgst'] == "" else float(request.POST['cgst']),
+                sgst = 0.0 if request.POST['sgst'] == "" else float(request.POST['sgst']),
+                tax_amount = 0.0 if request.POST['taxamount'] == "" else float(request.POST['taxamount']),
+                adjustment = 0.0 if request.POST['adj'] == "" else float(request.POST['adj']),
+                shipping_charge = 0.0 if request.POST['ship'] == "" else float(request.POST['ship']),
+                grandtotal = 0.0 if request.POST['grandtotal'] == "" else float(request.POST['grandtotal']),
+                description = request.POST['note'],
+            )
+
+            env.save()
+
+            if len(request.FILES) != 0:
+                env.document=request.FILES.get('file')
+            env.save()
+
+            if  "Saved" in request.POST:
+                env.status = "Saved" 
+            env.save()
+
+            itemId = request.POST.getlist("item_id[]")
+            itemName = request.POST.getlist("item_name[]")
+            hsn  = request.POST.getlist("hsn[]")
+            qty = request.POST.getlist("qty[]")
+            price = request.POST.getlist("priceListPrice[]") if 'priceList' in request.POST else request.POST.getlist("price[]")
+            tax = request.POST.getlist("taxGST[]") if request.POST['place_of_supply'] == com.state else request.POST.getlist("taxIGST[]")
+            discount = request.POST.getlist("discount[]")
+            total = request.POST.getlist("total[]")
+
+            if len(itemId)==len(itemName)==len(hsn)==len(qty)==len(price)==len(tax)==len(discount)==len(total) and itemId and itemName and hsn and qty and price and tax and discount and total:
+                mapped = zip(itemId,itemName,hsn,qty,price,tax,discount,total)
+                mapped = list(mapped)
+                for ele in mapped:
+                    itm = Items.objects.get(id = int(ele[0]))
+                    Eway_bill_item.objects.create(company = com, login_details = com.login_details,EwayBill = env, item = itm, hsn = ele[2], quantity = int(ele[3]), price = float(ele[4]), tax_rate = ele[5], discount = float(ele[6]), total = float(ele[7]))
+                    itm.current_stock -= int(ele[3])
+                    itm.save()
+
+            # Save transaction
+                    
+            EwayBillHistory.objects.create(
+                company = com,
+                login_details = log_details,
+                EwayBill = env,
+                action = 'Created'
+            )
+
+            return redirect('eway_bills')
+        else:
+            return redirect('create_eway_bill')
+    else:
+       return redirect('/')
+
+
+
