@@ -152,7 +152,7 @@
                             <thead>
                                 <tr class="text-center text-white">
                                     <th>Date</th>
-                                    <th>Transactions</th>
+                                    
                                     <th>Eway Bill Number</th>
                                     <th>Customer Name</th>
                                     <th>Mail ID</th>
@@ -164,7 +164,7 @@
                                 {% for e in bills %}
                                 <tr class='clickable-row text-center' onclick="">
                                     <td>{{e.start_date}}</td>
-                                    <td>{{ a.start_date }}</td>
+                                    
                                     <td>{{ e.eway_bill_number }}</td>
                                     <td>{{ e.customer.first_name }} {{ e.customer.last_name }}</td>
                                     <td>{{ e.customer_email}}</td>
