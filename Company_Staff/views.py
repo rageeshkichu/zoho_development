@@ -28479,4 +28479,31 @@ def createEwayBill(request):
        return redirect('/')
 
 
+def viewewaybill(request, id):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
+            dash_details = CompanyDetails.objects.get(login_details=log_details)
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+            dash_details = StaffDetails.objects.get(login_details=log_details)
+
+        allmodules= ZohoModules.objects.get(company = cmp)
+
+        bill = EwayBill.objects.get(id = id)
+        invItems = Eway_bill_item.objects.filter(EwayBill = bill)
+        recInv = EwayBill.objects.filter(company = cmp)
+        hist = EwayBillHistory.objects.filter(EwayBill = bill)
+        last_history = EwayBillHistory.objects.filter(EwayBill = bill).last()
+        created = EwayBillHistory.objects.get(EwayBill_id = bill,action = 'Created')
+        context = {
+            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'invoice':bill, 'invItems': invItems, 'allInvoices':recInv, 'history':hist, 'last_history':last_history, 'created':created,
+        }
+        return render(request, 'zohomodules/eway_bills/view_eway_bills.html', context)
+    else:
+        return redirect('/')
+
+
 

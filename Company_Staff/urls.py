@@ -686,6 +686,7 @@ urlpatterns = [
     path('create_eway_bill', views.create_eway_bill, name = 'create_eway_bill'),
     path('staff/get_itm_details3',views.getItemDetailsAjax3, name='getItemDetailsAjax3'),
     path('create_Eway_Bill',views.createEwayBill, name='createEwayBill'),
+    path('viewewaybill/<int:id>', views.viewewaybill, name= 'viewewaybill'),
 
     
     re_path(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),

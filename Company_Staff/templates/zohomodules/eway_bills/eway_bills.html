@@ -117,7 +117,7 @@
                             <div class="dropdown-menu ">
                                 <a class="dropdown-item text-black" onclick="sortTable(0)" >All</a>
                                 <a class="dropdown-item text-black" onclick="sortTable(3)">Customer Name</a>
-                                <a class="dropdown-item text-black" onclick="sortTable(2)">Rec. Invoice Number</a>
+                                <a class="dropdown-item text-black" onclick="sortTable(2)">Eway Bill Number</a>
                             </div>
                         </div>
                         
@@ -129,7 +129,6 @@
                             </a>
                             <div class="dropdown-menu">
                                 <a class="dropdown-item text-black" onclick="filterTable(6,'all')">All</a>
-                                <a class="dropdown-item text-black" onclick="filterTable(6,'draft')">Draft</a>
                                 <a class="dropdown-item text-black" onclick="filterTable(6,'saved')">Saved</a>
                             </div>
                             <a style="border: 1px solid; border-radius: 5px; height: 2.4rem; display: flex; align-items: center;" data-bs-toggle="modal" href="#importModal" class="btn btn-outline-warning">
@@ -140,7 +139,7 @@
                               <i class="fa fa-file-excel p-1" style="font-size: large;"></i>
                               <span style="font-size: 2vh; margin-left: 0.5rem;" class="text-center">Export</span>
                             </a>
-                            <a href="{% url 'addRecurringInvoice' %}" class="btn text-center btn-outline-warning" role="button" style="color: #ffae1f; width: 30%;">
+                            <a href="" class="btn text-center btn-outline-warning" role="button" style="color: #ffae1f; width: 30%;">
                                 NEW &nbsp; <i class="fa fa-plus mt-1"></i>
                             </a> 
                         </div>
@@ -162,7 +161,7 @@
                             </thead>
                             <tbody>
                                 {% for e in bills %}
-                                <tr class='clickable-row text-center' onclick="">
+                                <tr class='clickable-row text-center' onclick="window.location.href=`{% url 'viewewaybill' e.id %}`">
                                     <td>{{e.start_date}}</td>
                                     
                                     <td>{{ e.eway_bill_number }}</td>
