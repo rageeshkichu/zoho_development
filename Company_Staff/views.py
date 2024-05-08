@@ -28328,12 +28328,12 @@ def eway_bills(request):
             dash_details = CompanyDetails.objects.get(login_details=log_details)
             item=Items.objects.filter(company=dash_details)
             allmodules= ZohoModules.objects.get(company=dash_details,status='New')
-            
+            bills = EwayBill.objects.all()
             context = {
                     'details': dash_details,
                     'item': item,
                     'allmodules': allmodules,
-                    
+                    'bills':bills
             }
 
             return render(request,'zohomodules/eway_bills/eway_bills.html',context)
@@ -28355,10 +28355,46 @@ def create_eway_bill(request):
         accounts=Chart_of_Accounts.objects.filter(company=cmp)
         trm = Company_Payment_Term.objects.filter(company = cmp)
         itms = Items.objects.filter(company = cmp, activation_tag = 'active')
+
+        latest_inv = EwayBill.objects.filter(company = cmp).order_by('-id').first()
+
+        new_number = int(latest_inv.reference_no) + 1 if latest_inv else 1
+
+        if Eway_bill_Reference.objects.filter(company = cmp).exists():
+            deleted = Eway_bill_Reference.objects.get(company = cmp)
+            
+            if deleted:
+                while int(deleted.reference_number) >= new_number:
+                    new_number+=1
+
+        # Finding next rec_invoice number w r t last rec_invoice number if exists.
+        nxtInv = ""
+        lastInv = EwayBill.objects.filter(company=cmp).last()
+
+        if lastInv:
+            inv_no = str(lastInv.eway_bill_number)
+            numbers = []
+            stri = []
+            for word in inv_no:
+                if word.isdigit():
+                    numbers.append(word)
+                else:
+                    stri.append(word)
+
+            num = ''.join(numbers)
+            st = ''.join(stri)
+
+            inv_num = int(num) + 1
+            if num[0] == 0:
+                nxtInv = st + num.zfill(len(num)) 
+            else:
+                nxtInv = st + str(inv_num).zfill(len(num))
+        else:
+            nxtInv = 'EW001'
         
 
         context = {
-            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'customers': cust,'items':itms,'units':units,'accounts':accounts,'pTerms':trm,
+            'cmp':cmp,'allmodules':allmodules, 'billno':nxtInv ,'refno': new_number, 'details':dash_details, 'customers': cust,'items':itms,'units':units,'accounts':accounts,'pTerms':trm,
             
         }
         return render(request, 'zohomodules/eway_bills/create_eway_bill.html', context)
@@ -28370,7 +28406,7 @@ def getItemDetailsAjax3(request):
     if 'login_id' in request.session:
         log_id = request.session['login_id']
         log_details= LoginDetails.objects.get(id=log_id)
-        if log_details.user_type == 'company':
+        if log_details.user_type == 'Company':
             cmp = CompanyDetails.objects.get(login_details = log_details)
         else:
             cmp = StaffDetails.objects.get(login_details = log_details).company
@@ -28505,5 +28541,183 @@ def viewewaybill(request, id):
     else:
         return redirect('/')
 
+def editewaybill(request,id):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
+            dash_details = CompanyDetails.objects.get(login_details=log_details)
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+            dash_details = StaffDetails.objects.get(login_details=log_details)
+
+        allmodules= ZohoModules.objects.get(company = cmp)
+        cust = Customer.objects.filter(company = cmp, customer_status = 'Active')
+        trm = Company_Payment_Term.objects.filter(company = cmp)
+        itms = Items.objects.filter(company = cmp, activation_tag = 'active')
+        units = Unit.objects.filter(company=cmp)
+        accounts=Chart_of_Accounts.objects.filter(company=cmp)
+
+        invoice = EwayBill.objects.get(id = id)
+        invItems = Eway_bill_item.objects.filter(EwayBill = invoice)
+
+        context = {
+            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'customers': cust,'pTerms':trm, 'items':itms,
+            'units': units,'accounts':accounts, 'invoice':invoice, 'invItems': invItems,
+        }
+        return render(request, 'zohomodules/eway_bills/edit_eway_bills.html', context)
+    else:
+        return redirect('/')
+
+
+def updateewaybill(request,id):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+        rec_inv = EwayBill.objects.get(id = id)
+        if request.method == 'POST':
+            rec_inv.customer = Customer.objects.get(id = request.POST['customerId'])
+            rec_inv.customer_email = request.POST['customer_email']
+            rec_inv.document_type = request.POST['document_type']
+            rec_inv.transaction_sub_type = request.POST['transaction_sub_type']
+            rec_inv.eway_billing_address = request.POST['bill_address']
+            rec_inv.eway_bill_number = request.POST['EwayBill_no']
+            rec_inv.reference_no = request.POST['reference_number']
+            rec_inv.transaction_type = request.POST['itemType']
+            rec_inv.transportation = request.POST['entry_type']
+            rec_inv.kilometers = request.POST['kilometers']
+            rec_inv.vehicle_number = request.POST['vehicle_number']
+            rec_inv.gst_type = request.POST['customer_gst_type']
+            rec_inv.gstin = request.POST['customer_gstin']
+            rec_inv.place_of_supply = request.POST['place_of_supply']
+            rec_inv.start_date = request.POST['start_date']
+            rec_inv.subtotal = 0.0 if request.POST['subtotal'] == "" else float(request.POST['subtotal'])
+            rec_inv.igst = 0.0 if request.POST['igst'] == "" else float(request.POST['igst'])
+            rec_inv.cgst = 0.0 if request.POST['cgst'] == "" else float(request.POST['cgst'])
+            rec_inv.sgst = 0.0 if request.POST['sgst'] == "" else float(request.POST['sgst'])
+            rec_inv.tax_amount = 0.0 if request.POST['taxamount'] == "" else float(request.POST['taxamount'])
+            rec_inv.adjustment = 0.0 if request.POST['adj'] == "" else float(request.POST['adj'])
+            rec_inv.shipping_charge = 0.0 if request.POST['ship'] == "" else float(request.POST['ship'])
+            rec_inv.grandtotal = 0.0 if request.POST['grandtotal'] == "" else float(request.POST['grandtotal'])
+            rec_inv.description = request.POST['note']
+
+            if len(request.FILES) != 0:
+                rec_inv.document=request.FILES.get('file')
+            rec_inv.save()
+
+
+            # Save rec_invoice items.
+
+            itemId = request.POST.getlist("item_id[]")
+            itemName = request.POST.getlist("item_name[]")
+            hsn  = request.POST.getlist("hsn[]")
+            qty = request.POST.getlist("qty[]")
+            price = request.POST.getlist("priceListPrice[]") if 'priceList' in request.POST else request.POST.getlist("price[]")
+            tax = request.POST.getlist("taxGST[]") if request.POST['place_of_supply'] == com.state else request.POST.getlist("taxIGST[]")
+            discount = request.POST.getlist("discount[]")
+            total = request.POST.getlist("total[]")
+            inv_item_ids = request.POST.getlist("id[]")
+            invItem_ids = [int(id) for id in inv_item_ids]
+
+            inv_items = Eway_bill_item.objects.filter(EwayBill = rec_inv)
+            object_ids = [obj.id for obj in inv_items]
+
+            ids_to_delete = [obj_id for obj_id in object_ids if obj_id not in invItem_ids]
+            for itmId in ids_to_delete:
+                invItem = Eway_bill_item.objects.get(id = itmId)
+                item = Items.objects.get(id = invItem.item.id)
+                item.current_stock += invItem.quantity
+                item.save()
+
+            Eway_bill_item.objects.filter(id__in=ids_to_delete).delete()
+            
+            count = Eway_bill_item.objects.filter(EwayBill = rec_inv).count()
+
+            if len(itemId)==len(itemName)==len(hsn)==len(qty)==len(price)==len(tax)==len(discount)==len(total)==len(invItem_ids) and invItem_ids and itemId and itemName and hsn and qty and price and tax and discount and total:
+                mapped = zip(itemId,itemName,hsn,qty,price,tax,discount,total,invItem_ids)
+                mapped = list(mapped)
+                for ele in mapped:
+                    if int(len(itemId))>int(count):
+                        if ele[8] == 0:
+                            itm = Items.objects.get(id = int(ele[0]))
+                            Eway_bill_item.objects.create(company = com, login_details = com.login_details, EwayBill = rec_inv, item = itm, hsn = ele[2], quantity = int(ele[3]), price = float(ele[4]), tax_rate = ele[5], discount = float(ele[6]), total = float(ele[7]))
+                            itm.current_stock -= int(ele[3])
+                            itm.save()
+                        else:
+                            itm = Items.objects.get(id = int(ele[0]))
+                            inItm = Eway_bill_item.objects.get(id = int(ele[8]))
+                            crQty = int(inItm.quantity)
+                            
+                            Eway_bill_item.objects.filter( id = int(ele[8])).update(EwayBill = rec_inv, item = itm, hsn = ele[2], quantity = int(ele[3]), price = float(ele[4]), tax_rate = ele[5], discount = float(ele[6]), total = float(ele[7]))
+
+                            if crQty < int(ele[3]):
+                                itm.current_stock -=  abs(crQty - int(ele[3]))
+                            elif crQty > int(ele[3]):
+                                itm.current_stock += abs(crQty - int(ele[3]))
+                            itm.save()
+                    else:
+                        itm = Items.objects.get(id = int(ele[0]))
+                        inItm = Eway_bill_item.objects.get(id = int(ele[8]))
+                        crQty = int(inItm.quantity)
+
+                        Eway_bill_item.objects.filter( id = int(ele[8])).update(EwayBill = rec_inv, item = itm, hsn = ele[2], quantity = int(ele[3]), price = float(ele[4]), tax_rate = ele[5], discount = float(ele[6]), total = float(ele[7]))
+
+                        if crQty < int(ele[3]):
+                            itm.current_stock -=  abs(crQty - int(ele[3]))
+                        elif crQty > int(ele[3]):
+                            itm.current_stock += abs(crQty - int(ele[3]))
+                        itm.save()
+            
+            # Save transaction
+                    
+            EwayBillHistory.objects.create(
+                company = com,
+                login_details = log_details,
+                EwayBill = rec_inv,
+                action = 'Edited'
+            )
+
+            return redirect(viewewaybill, id)
+        else:
+            return redirect(editewaybill, id)
+    else:
+       return redirect('/')
+
+
+def deleteewaybill(request, id):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+        recInv = EwayBill.objects.get( id = id)
+        for i in Eway_bill_item.objects.filter(EwayBill = recInv):
+            item = Items.objects.get(id = i.item.id)
+            item.current_stock += i.quantity
+            item.save()
+        
+        Eway_bill_item.objects.filter(EwayBill = recInv).delete()
+
+        # Storing ref number to deleted table
+        # if entry exists and lesser than the current, update and save => Only one entry per company
+        if Eway_bill_Reference.objects.filter(company = com).exists():
+            deleted = Eway_bill_Reference.objects.get(company = com)
+            if int(recInv.reference_no) > int(deleted.reference_number):
+                deleted.reference_number = recInv.reference_no
+                deleted.save()
+        else:
+            Eway_bill_Reference.objects.create(company = com, login_details = com.login_details, reference_number = recInv.reference_no)
+        
+        recInv.delete()
+        return redirect(eway_bills)
 
 

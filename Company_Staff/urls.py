@@ -687,6 +687,9 @@ urlpatterns = [
     path('staff/get_itm_details3',views.getItemDetailsAjax3, name='getItemDetailsAjax3'),
     path('create_Eway_Bill',views.createEwayBill, name='createEwayBill'),
     path('viewewaybill/<int:id>', views.viewewaybill, name= 'viewewaybill'),
+    path('editewaybill/<int:id>', views.editewaybill, name= 'editewaybill'),
+    path('updateewaybill/<int:id>', views.updateewaybill, name= 'updateewaybill'),
+    path('deleteewaybill/<int:id>', views.deleteewaybill, name= 'deleteewaybill'),
 
     
     re_path(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),
