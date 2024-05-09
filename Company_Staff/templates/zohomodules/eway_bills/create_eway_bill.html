@@ -298,7 +298,7 @@
                                 
                             </div>
                         </div>
-                        <button type="button" data-toggle="modal" data-target="#newCustomer" class="btn btn-outline-warning py-2 ms-1">+</button>
+                        <button  style="margin-top: 10px;" type="button" data-toggle="modal" data-target="#newCustomer" class="btn btn-outline-warning py-2 ms-1">+</button>
                     </div>
                   </div>
                 </div>
@@ -511,12 +511,43 @@
     });
 </script>
 
-                    <div class="row mt-4">
-                      <label for="" class="col-md-3 labels">E Way Bill No.</label>
-                      <div class="col-md-6">
-                        <input type="text" class="form-control bg-black text-white" name="EwayBill_no" value="" placeholder="{{billno}}">
-                      </div>
-                    </div>
+<div class="row mt-4">
+    <label for="" class="col-md-3 labels">E Way Bill No.</label>
+    <div class="col-md-6">
+        <input type="text" id="EwayBill_no" class="form-control bg-black text-white" name="EwayBill_no" value="" placeholder="{{billno}}">
+    </div>
+</div>
+<div id="bill_no_message"></div>
+<style>
+    #bill_no_message {
+        color: red;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+    $('#EwayBill_no').on('input', function() {
+        var billNo = $(this).val();
+        console.log(billNo)
+        $.ajax({
+            url: "{% url 'check_eway_bill' %}",
+            type: 'POST',
+            data: {
+                bill_no : billNo,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.exists) {
+                    $('#bill_no_message').text('This E Way Bill number already exists.');
+                } else {
+                    $('#bill_no_message').text('');
+                }
+            }
+        });
+    });
+});
+
+</script>
 
 
                     
@@ -532,7 +563,7 @@
                   <div class="row mt-2">
                     <div class="col-md-12 mt-2">
                       <div class="row">
-                        <label for="" class="col-md-3 labels">Start Date</label>
+                        <label for="" class="col-md-3 labels">Date</label>
                         <div class="col-md-6">
                           <input type="date" class="form-control bg-black text-white" id="startDate" name="start_date" value="{% now 'Y-m-d' %}">
                         </div>

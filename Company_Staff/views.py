@@ -83,7 +83,7 @@ from django.shortcuts import render
 from .models import RetainerInvoice
 from .models import RetainerInvoice, Retaineritems
 from .models import RetainerInvoiceComment  # Import the RetainerInvoiceComment model
-from Company_Staff.models import Customer,Items,EwayBill,Eway_bill_item,EwayBillHistory,Eway_bill_Reference
+from Company_Staff.models import Customer,Items,EwayBill,Eway_bill_item,EwayBillHistory,Eway_bill_Reference,Eway_Bill_Comments
 
 # Create your views here.
 
@@ -28301,10 +28301,8 @@ def loan_check(request):
         return JsonResponse(data)
 
 
-def sample(request):
-    customers = Customer.objects.all()
-    return render(request,'zohomodules/eway_bills/sample.html',{'customers':customers})
 
+# < --------------------- > Eway Bills < ------------------------------- >
 
 def eway_bills(request):
     if 'login_id' in request.session:
@@ -28534,8 +28532,9 @@ def viewewaybill(request, id):
         hist = EwayBillHistory.objects.filter(EwayBill = bill)
         last_history = EwayBillHistory.objects.filter(EwayBill = bill).last()
         created = EwayBillHistory.objects.get(EwayBill_id = bill,action = 'Created')
+        cmts = Eway_Bill_Comments.objects.filter(eway_bill = bill)
         context = {
-            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'invoice':bill, 'invItems': invItems, 'allInvoices':recInv, 'history':hist, 'last_history':last_history, 'created':created,
+            'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'invoice':bill, 'invItems': invItems, 'allInvoices':recInv, 'history':hist, 'last_history':last_history, 'created':created,'comments':cmts
         }
         return render(request, 'zohomodules/eway_bills/view_eway_bills.html', context)
     else:
@@ -28719,5 +28718,376 @@ def deleteewaybill(request, id):
         
         recInv.delete()
         return redirect(eway_bills)
+
+def ewaybillpdf(request,id):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+        
+        inv = EwayBill.objects.get(id = id)
+        itms = Eway_bill_item.objects.filter(EwayBill = inv)
+    
+        context = {'recInvoice':inv, 'recInvItems':itms,'cmp':com}
+        
+        template_path = 'zohomodules/eway_bills/eway_bill_pdf.html'
+        fname = 'Eway_bill'+inv.eway_bill_number
+        # Create a Django response object, and specify content_type as pdftemp_
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] =f'attachment; filename = {fname}.pdf'
+        # find the template and render it.
+        template = get_template(template_path)
+        html = template.render(context)
+
+        # create a pdf
+        pisa_status = pisa.CreatePDF(
+        html, dest=response)
+        # if error then show some funny view
+        if pisa_status.err:
+            return HttpResponse('We had some errors <pre>' + html + '</pre>')
+        return response
+    else:
+        return redirect('/')
+
+
+
+def shareewaybillemail(request,id):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+        
+        inv = EwayBill.objects.get(id = id)
+        itms = Eway_bill_item.objects.filter(EwayBill_id = inv)
+        try:
+            if request.method == 'POST':
+                emails_string = request.POST['email_ids']
+
+                # Split the string by commas and remove any leading or trailing whitespace
+                emails_list = [email.strip() for email in emails_string.split(',')]
+                email_message = request.POST['email_message']
+                # print(emails_list)
+            
+                context = {'EwayBill':inv, 'EwayBillItems':itms,'cmp':com}
+                template_path = 'zohomodules/eway_bills/eway_bill_pdf.html'
+                template = get_template(template_path)
+
+                html  = template.render(context)
+                result = BytesIO()
+                pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+                pdf = result.getvalue()
+                filename = f'Eway_Bill_{inv.eway_bill_number}'
+                subject = f"Eway_Bill_{inv.eway_bill_number}"
+                # from django.core.mail import EmailMessage as EmailMsg
+                email = EmailMsg(subject, f"Hi,\nPlease find the attached Eway Bill for - Eway Bill-{inv.eway_bill_number}. \n{email_message}\n\n--\nRegards,\n{com.company_name}\n{com.address}\n{com.state} - {com.country}\n{com.contact}", from_email=settings.EMAIL_HOST_USER, to=emails_list)
+                email.attach(filename, pdf, "application/pdf")
+                email.send(fail_silently=False)
+
+                messages.success(request, 'Eway Bill details has been shared via email successfully..!')
+                return redirect(viewewaybill,id)
+        except Exception as e:
+            print(e)
+            messages.error(request, f'{e}')
+            return redirect(viewewaybill, id)
+
+
+def attachewaybillfile(request, id):
+    if 'login_id' in request.session:
+        inv = EwayBill.objects.get(id = id)
+
+        if request.method == 'POST' and len(request.FILES) != 0:
+            inv.document = request.FILES.get('file')
+            inv.save()
+
+        return redirect(viewewaybill, id)
+    else:
+        return redirect('/')
+
+
+def addewaybillcomment(request, id):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+
+        rec_inv = EwayBill.objects.get(id = id)
+        if request.method == "POST":
+            cmt = request.POST['comment'].strip()
+
+            Eway_Bill_Comments.objects.create(company = com, eway_bill = rec_inv, comments = cmt)
+            return redirect(viewewaybill, id)
+        return redirect(viewewaybill, id)
+    return redirect('/')
+
+
+def deleteewaybillcomment(request,id):
+    if 'login_id' in request.session:
+        cmt = Eway_Bill_Comments.objects.get(id = id)
+        recInvId = cmt.eway_bill.id
+        cmt.delete()
+        return redirect(viewewaybill, recInvId)
+    else:
+        return redirect('/')
+
+def importewaybillexell(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company 
+
+        current_datetime = timezone.now()
+        dateToday =  current_datetime.date()
+
+        if request.method == "POST" and 'excel_file' in request.FILES:
+        
+            excel_file = request.FILES['excel_file']
+
+            wb = load_workbook(excel_file)
+
+            # checking estimate sheet columns
+            try:
+                ws = wb["recurring_invoice"]
+            except:
+                print('sheet not found')
+                messages.error(request,'`recurring_invoice` sheet not found.! Please check.')
+                return redirect(recurringInvoice)
+
+            try:
+                ws = wb["items"]
+            except:
+                print('sheet not found')
+                messages.error(request,'`items` sheet not found.! Please check.')
+                return redirect(recurringInvoice)
+            
+            ws = wb["recurring_invoice"]
+            rec_inv_columns = ['SLNO','CUSTOMER','DATE','PLACE OF SUPPLY','Eway Bill NO','TERMS','DESCRIPTION','SUB TOTAL','IGST','CGST','SGST','TAX AMOUNT','ADJUSTMENT','SHIPPING CHARGE','GRAND TOTAL','ADVANCE']
+            rec_inv_sheet = [cell.value for cell in ws[1]]
+            if rec_inv_sheet != rec_inv_columns:
+                print('invalid sheet')
+                messages.error(request,'`eway_bill` sheet column names or order is not in the required formate.! Please check.')
+                return redirect(eway_bills)
+
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                slno, customer,date,place_of_supply,  eway_bill_no, terms,  description, subtotal, igst, cgst, sgst, taxamount, adjustment, shipping, grandtotal, advance = row
+                if slno is None  or customer is None  or date is None or place_of_supply is None  or eway_bill_no is None  or  subtotal is None or taxamount is None or grandtotal is None:
+                    print('eway bill == invalid data')
+                    messages.error(request,'`eway bill` sheet entries missing required fields.! Please check.')
+                    return redirect(eway_bills)
+            
+            # checking items sheet columns
+            ws = wb["items"]
+            items_columns = ['RI NO','PRODUCT','HSN','QUANTITY','PRICE','TAX PERCENTAGE','DISCOUNT','TOTAL']
+            items_sheet = [cell.value for cell in ws[1]]
+            if items_sheet != items_columns:
+                print('invalid sheet')
+                messages.error(request,'`items` sheet column names or order is not in the required formate.! Please check.')
+                return redirect(eway_bills)
+
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                ri_no,name,hsn,quantity,price,tax_percentage,discount,total = row
+                if ri_no is None or name is None or quantity is None or tax_percentage is None or total is None:
+                    print('items == invalid data')
+                    messages.error(request,'`items` sheet entries missing required fields.! Please check.')
+                    return redirect(eway_bills)
+            
+            # getting data from rec_invoice sheet and create rec_invoice.
+            incorrect_data = []
+            existing_pattern = []
+            ws = wb['recurring_invoice']
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                slno, customer,startdate,place_of_supply,eway_bill_no, terms,  description, subtotal, igst, cgst, sgst, taxamount, adjustment, shipping, grandtotal, advance = row
+                recInvNo = slno
+                if slno is None:
+                    continue
+                # Fetching last rec_inv and assigning upcoming rec_inv no as current + 1
+                # Also check for if any rec_inv is deleted and rec_inv no is continuos w r t the deleted rec_inv
+                latest_inv = EwayBill.objects.filter(company = com).order_by('-id').first()
+                
+                new_number = int(latest_inv.reference_no) + 1 if latest_inv else 1
+
+                if Eway_bill_Reference.objects.filter(company = com).exists():
+                    deleted = Eway_bill_Reference.objects.get(company = com)
+                    
+                    if deleted:
+                        while int(deleted.reference_number) >= new_number:
+                            new_number+=1
+                
+                cust = customer.split(' ')
+            
+                if len(cust) > 2:
+                    cust[1] = cust[1] + ' ' + ' '.join(cust[2:])
+                    cust = cust[:2]
+                    fName = cust[0]
+                    lName = cust[1]
+                else:
+                    fName = cust[0]
+                    lName = cust[1]
+                print(cust,fName,lName)
+
+                if lName == "":  
+                    if not Customer.objects.filter(company = com, first_name = fName).exists():
+                        print('No Customer1')
+                        incorrect_data.append(slno)
+                        continue
+                    try:
+                        c = Customer.objects.filter(company = com, first_name = fName).first()
+                        email = c.customer_email
+                        gstType = c.GST_treatement
+                        gstIn = c.GST_number
+                        adrs = f"{c.billing_address}, {c.billing_city}\n{c.billing_state}\n{c.billing_country}\n{c.billing_pincode}"
+                    except:
+                        pass
+
+                if fName != "" and lName != "":  
+                    if not Customer.objects.filter(company = com, first_name = fName, last_name = lName).exists():
+                        print('No Customer2')
+                        incorrect_data.append(slno)
+                        continue
+                    try:
+                        c = Customer.objects.filter(company = com, first_name = fName, last_name = lName).first()
+                        email = c.customer_email
+                        gstType = c.GST_treatement
+                        gstIn = c.GST_number
+                        adrs = f"{c.billing_address}, {c.billing_city}\n{c.billing_state}\n{c.billing_country}\n{c.billing_pincode}"
+                    except:
+                        pass
+
+                if startdate is None:
+                    startdate = dateToday
+                else:
+                    startdate = datetime.strptime(startdate, '%Y-%m-%d').date()
+
+                PatternStr = []
+                for word in eway_bill_no:
+                    if word.isdigit():
+                        pass
+                    else:
+                        PatternStr.append(word)
+                
+                pattern = ''
+                for j in PatternStr:
+                    pattern += j
+
+                pattern_exists = checkRecInvNumberPattern(pattern)
+
+                if pattern !="" and pattern_exists:
+                    existing_pattern.append(slno)
+                    continue
+
+                while EwayBill.objects.filter(company = com, eway_bill_no__iexact = eway_bill_no).exists():
+                    eway_bill_no = getNextRINumber(eway_bill_no)
+
+                
+                
+
+                
+
+                recInv = EwayBill(
+                    company = com,
+                    login_details = com.login_details,
+                    customer = None if c is None else c,
+                    customer_email = email,
+                    billing_address = adrs,
+                    gst_type = gstType,
+                    gstin = gstIn,
+                    place_of_supply = place_of_supply,
+                
+                    reference_no = new_number,
+                    eway_bill_no = eway_bill_no,
+                    
+                    start_date = startdate,
+                    subtotal = 0.0 if subtotal == "" else float(subtotal),
+                    igst = 0.0 if igst == "" else float(igst),
+                    cgst = 0.0 if cgst == "" else float(cgst),
+                    sgst = 0.0 if sgst == "" else float(sgst),
+                    tax_amount = 0.0 if taxamount == "" else float(taxamount),
+                    adjustment = 0.0 if adjustment == "" else float(adjustment),
+                    shipping_charge = 0.0 if shipping == "" else float(shipping),
+                    grandtotal = 0.0 if grandtotal == "" else float(grandtotal),
+                    
+                    
+                    description = description,
+                    status = "Draft"
+                )
+                recInv.save()
+
+                # Transaction history
+                history = EwayBillHistory(
+                    company = com,
+                    login_details = log_details,
+                    EwayBill = recInv,
+                    action = 'Created'
+                )
+                history.save()
+
+                # Items for the estimate
+                ws = wb['items']
+                for row in ws.iter_rows(min_row=2, values_only=True):
+                    rec_no,name,hsn,quantity,price,tax_percentage,discount,total = row
+                    if int(rec_no) == int(recInvNo):
+                        print(row)
+                        if discount is None:
+                            discount=0
+                        if price is None:
+                            price=0
+                        if quantity is None:
+                            quantity=0
+                        if not Items.objects.filter(company = com, item_name = name).exists():
+                            print('No Item')
+                            incorrect_data.append(rec_no)
+                            continue
+                        try:
+                            itm = Items.objects.filter(company = com, item_name = name).first()
+                        except:
+                            pass
+
+                        Eway_bill_item.objects.create(company = com, login_details = com.login_details, eway_bill_no = recInv, item = itm, hsn = hsn, quantity = quantity, price = price, tax_rate = tax_percentage, discount = discount, total = total)
+                        itm.current_stock -= int(quantity)
+                        itm.save()
+
+            if not incorrect_data and not existing_pattern:
+                messages.success(request, 'Data imported successfully.!')
+                return redirect(eway_bills)
+            else:
+                if incorrect_data:
+                    messages.warning(request, f'Data with following SlNo could not import due to incorrect data provided -> {", ".join(str(item) for item in incorrect_data)}')
+                if existing_pattern:
+                    messages.warning(request, f'Data with following SlNo could not import due to Eway No pattern exists already -> {", ".join(str(item) for item in existing_pattern)}')
+                return redirect(eway_bills)
+        else:
+            return redirect(eway_bills)
+    else:
+        return redirect('/')
+
+
+
+def check_eway_bill(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+        
+    if request.method == 'POST':
+        bill_no = request.POST.get('bill_no', None)
+        print(bill_no)
+        if bill_no:
+            exists = EwayBill.objects.filter(eway_bill_number=bill_no).exists()
+            return JsonResponse({'exists': exists})
+    return JsonResponse({'exists': False})
 
 

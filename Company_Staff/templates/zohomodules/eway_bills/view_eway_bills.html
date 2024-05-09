@@ -357,7 +357,6 @@
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'company_dashboard' %}" class="text-warning-emphasis">Dashboard</a></li>
-        <li class="breadcrumb-item"><a class="text-warning-emphasis">Sales</a></li>
         <li class="breadcrumb-item"><a href="{% url 'eway_bills' %}" class="text-warning-emphasis">Eway Bills</a></li>
         <li class="breadcrumb-item" aria-current="page" id="over">Overview</li>
         <li class="breadcrumb-item" aria-current="page" id="tmplt" style="display: none;">Templates</li>
@@ -484,7 +483,7 @@
                           {% endif %}
                       </div>
                       
-                        <a href="{% url 'recurringInvoicePdf' invoice.id %}" class="btn btn-outline-warning small_btn mt-2 ms-1" style="display: none;" title="PDF" id="pdf_btn"> 
+                        <a href="{% url 'ewaybillpdf' invoice.id %}" class="btn btn-outline-warning small_btn mt-2 ms-1" style="display: none;" title="PDF" id="pdf_btn"> 
                           <i class="fa fa-file-pdf"></i>
                         </a>
                         <a class="btn btn-outline-warning small_btn mt-2 ms-1" style="display: none;" onclick="slipPdf()" title="SLIP PDF" id="slipPdf_btn"> 
@@ -1318,7 +1317,7 @@
         </button>
       </div>
       <div class="modal-body mx-3" style="background-color: #000;">
-        <form action="{% url 'shareRecurringInvoiceToEmail' invoice.id %}" method="post" id="share_to_email_form" class="needs-validation" novalidate enctype="multipart/form-data">
+        <form action="{% url 'shareewaybillemail' invoice.id %}" method="post" id="share_to_email_form" class="needs-validation" novalidate enctype="multipart/form-data">
           {%csrf_token%}
           <div class="form-group">
               <label for="emailIds">Email IDs</label>
@@ -1356,7 +1355,7 @@
         </button>
       </div>
       <div class="modal-body mx-3" style="background-color: #000;">
-        <form action="{% url 'attachRecurringInvoiceFile' invoice.id %}" method="post" class="needs-validation" novalidate enctype="multipart/form-data">
+        <form action="{% url 'attachewaybillfile' invoice.id %}" method="post" class="needs-validation" novalidate enctype="multipart/form-data">
           {%csrf_token%}
           <div class="row mt-2">
             <div class="col-md-3">
@@ -1394,7 +1393,7 @@
         </button>
       </div>
       <div class="modal-body mx-3" style="background-color: #000;">
-        <form action="{% url 'addRecurringInvoiceComment' invoice.id %}" method="post" class="needs-validation" novalidate enctype="multipart/form-data">
+        <form action="{% url 'addewaybillcomment' invoice.id %}" method="post" class="needs-validation" novalidate enctype="multipart/form-data">
           {%csrf_token%}
           <div class="row mt-2">
             <div class="col-12">
@@ -1416,7 +1415,7 @@
                             <tr class="">
                                 <td class="text-center">{{forloop.counter }}</td>
                                 <td class="text-center">{{c.comments}}</td>
-                                <td class="text-center"><a class="text-danger" href="{% url 'deleteRecurringInvoiceComment' c.id %}" onclick="return confirm('Are you sure you want to delete.?')"><i class="fa fa-trash" style="font-size: 1.1rem;"></i></a></td>
+                                <td class="text-center"><a class="text-danger" href="{% url 'deleteewaybillcomment' c.id %}" onclick="return confirm('Are you sure you want to delete.?')"><i class="fa fa-trash" style="font-size: 1.1rem;"></i></a></td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -1739,7 +1738,7 @@
     var opt =
     {
         margin: 1,
-        filename: 'RecurringInvoice_slip_'+ recInvNo + '.pdf',
+        filename: 'EwayBill_slip_'+ recInvNo + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }

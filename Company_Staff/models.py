@@ -1728,7 +1728,7 @@ class RetainerInvoiceHistory(models.Model):
     action = models.CharField(max_length=100, default='')  # Provide a default value here
     # Add any other fields as needed
 
-
+# < -------------------- > Eway Bills < ------------------------------- >
 
 class EwayBill(models.Model):
     company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE,null=True)
@@ -1789,3 +1789,8 @@ class EwayBillHistory(models.Model):
     date = models.DateField(auto_now_add=True)
     
     action = models.CharField(max_length=20, null=True)
+
+class Eway_Bill_Comments(models.Model):
+    company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE, null=True)
+    eway_bill = models.ForeignKey(EwayBill,on_delete=models.CASCADE,null=True,blank=True)
+    comments = models.CharField(max_length=500,null=True,blank=True)

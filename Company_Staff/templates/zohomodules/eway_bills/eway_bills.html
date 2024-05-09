@@ -139,7 +139,7 @@
                               <i class="fa fa-file-excel p-1" style="font-size: large;"></i>
                               <span style="font-size: 2vh; margin-left: 0.5rem;" class="text-center">Export</span>
                             </a>
-                            <a href="" class="btn text-center btn-outline-warning" role="button" style="color: #ffae1f; width: 30%;">
+                            <a href="{% url 'create_eway_bill' %}" class="btn text-center btn-outline-warning" role="button" style="color: #ffae1f; width: 30%;">
                                 NEW &nbsp; <i class="fa fa-plus mt-1"></i>
                             </a> 
                         </div>
@@ -184,7 +184,7 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content" style="background-color: #3b3b3b;">
             <div class="modal-header">
-                <h3 class="modal-title text-light" id="exampleModalLabel">Import Recurring Invoice</h3>
+                <h3 class="modal-title text-light" id="exampleModalLabel">Import Eway Bill</h3>
                 <button type="button" class="btn close text-white" data-bs-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true" style="font-size: x-large;">&times;</span>
                 </button>
@@ -203,9 +203,9 @@
                     </div>
                 </div>
                 <div class="sample_file mb-2">
-                    <a href="{% url 'downloadRecurringInvoiceSampleImportFile' %}" class="fw-bolder btn btn-outline-warning btn-sm">Download Sample File</a>
+                    <a href="" class="fw-bolder btn btn-outline-warning btn-sm">Download Sample File</a>
                 </div>
-                <form id="importEstimateForm" action="{% url 'importRecurringInvoiceFromExcel' %}" method="POST" class="form" enctype="multipart/form-data">
+                <form id="importEstimateForm" action="{% url 'importewaybillexell' %}" method="POST" class="form" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="excel_file" class="form-label text-white">File</label>

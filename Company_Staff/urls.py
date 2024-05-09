@@ -681,7 +681,10 @@ urlpatterns = [
     path('getInvoiceDetails',views.getInvoiceDetails, name='getInvoiceDetails'),
     # --------------------  Credit Note - end - harikrishnan  ------------------------------- 
 
-    path('sample', views.sample, name = 'sample'),
+
+    # --------------------  Credit Note - end - harikrishnan  ------------------------------- 
+
+    # ----------------------E way Bills  ------------------------------- 
     path('eway_bills', views.eway_bills, name = 'eway_bills'),
     path('create_eway_bill', views.create_eway_bill, name = 'create_eway_bill'),
     path('staff/get_itm_details3',views.getItemDetailsAjax3, name='getItemDetailsAjax3'),
@@ -690,7 +693,14 @@ urlpatterns = [
     path('editewaybill/<int:id>', views.editewaybill, name= 'editewaybill'),
     path('updateewaybill/<int:id>', views.updateewaybill, name= 'updateewaybill'),
     path('deleteewaybill/<int:id>', views.deleteewaybill, name= 'deleteewaybill'),
-
+    path('ewaybillpdf/<int:id>', views.ewaybillpdf, name= 'ewaybillpdf'),
+    path('shareewaybillemail/<int:id>', views.shareewaybillemail, name= 'shareewaybillemail'),
+    path('attachewaybillfile/<int:id>', views.attachewaybillfile, name = 'attachewaybillfile'),
+    path('addewaybillcomment/<int:id>', views.addewaybillcomment, name= 'addewaybillcomment'),
+    path('deleteewaybillcomment/<int:id>', views.deleteewaybillcomment, name= 'deleteewaybillcomment'),
+    path('importewaybillexell', views.importewaybillexell, name= 'importewaybillexell'),
+    path('check_eway_bill/', views.check_eway_bill, name='check_eway_bill'),
+    # -------------------------Eway Bills End ------Ambadi G------------------------- 
     
     re_path(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),
 ]
