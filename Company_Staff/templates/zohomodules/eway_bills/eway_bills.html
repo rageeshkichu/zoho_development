@@ -150,6 +150,7 @@
                         <table class="table table-responsive-md mt-4" id="recurring_inv_table">
                             <thead>
                                 <tr class="text-center text-white">
+                                    <th>Serial Number</th>
                                     <th>Date</th>
                                     
                                     <th>Eway Bill Number</th>
@@ -162,6 +163,7 @@
                             <tbody>
                                 {% for e in bills %}
                                 <tr class='clickable-row text-center' onclick="window.location.href=`{% url 'viewewaybill' e.id %}`">
+                                    <td>{{ forloop.counter }}</td>
                                     <td>{{e.start_date}}</td>
                                     
                                     <td>{{ e.eway_bill_number }}</td>

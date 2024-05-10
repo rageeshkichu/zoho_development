@@ -83,7 +83,7 @@ from django.shortcuts import render
 from .models import RetainerInvoice
 from .models import RetainerInvoice, Retaineritems
 from .models import RetainerInvoiceComment  # Import the RetainerInvoiceComment model
-from Company_Staff.models import Customer,Items,EwayBill,Eway_bill_item,EwayBillHistory,Eway_bill_Reference,Eway_Bill_Comments
+from Company_Staff.models import Customer,Items,EwayBill,Eway_bill_item,EwayBillHistory,Eway_bill_Reference,Eway_Bill_Comments,Transportation
 
 # Create your views here.
 
@@ -28353,6 +28353,7 @@ def create_eway_bill(request):
         accounts=Chart_of_Accounts.objects.filter(company=cmp)
         trm = Company_Payment_Term.objects.filter(company = cmp)
         itms = Items.objects.filter(company = cmp, activation_tag = 'active')
+        trpt = Transportation.objects.all()
 
         latest_inv = EwayBill.objects.filter(company = cmp).order_by('-id').first()
 
@@ -28392,7 +28393,7 @@ def create_eway_bill(request):
         
 
         context = {
-            'cmp':cmp,'allmodules':allmodules, 'billno':nxtInv ,'refno': new_number, 'details':dash_details, 'customers': cust,'items':itms,'units':units,'accounts':accounts,'pTerms':trm,
+            'cmp':cmp,'allmodules':allmodules, 'billno':nxtInv ,'refno': new_number, 'details':dash_details, 'customers': cust,'items':itms,'units':units,'accounts':accounts,'pTerms':trm,'trpt':trpt
             
         }
         return render(request, 'zohomodules/eway_bills/create_eway_bill.html', context)
@@ -28440,6 +28441,30 @@ def createEwayBill(request):
             com = StaffDetails.objects.get(login_details = log_details).company
         
         if request.method == 'POST':
+            eway_bill_number = request.POST['EwayBill_no']
+            
+            # Check if the E-way Bill number already exists in the database
+            if EwayBill.objects.filter(eway_bill_number=eway_bill_number).exists():
+                res = f'<script>alert("Eway Bill already Exists.! Try another!");window.history.back();</script>'
+                return HttpResponse(res)
+
+            transaction_type = request.POST.get('itemType')
+            
+            # Extract HSN or SAC number based on transaction type
+            if transaction_type == 'Goods':
+                hsn_number = request.POST.get('hsnNumber')
+                sac_number = None  # Since HSN is applicable only for Goods, set SAC number to None
+            else:
+                hsn_number = None  # Since SAC is applicable only for Services, set HSN number to None
+                sac_number = request.POST.get('sacNumber')
+            
+            # Check if HSN number or SAC number already exists in the database
+            if hsn_number is not None and EwayBill.objects.filter(hsn=hsn_number).exists():
+                res = '<script>alert("HSN number already exists!");window.history.back();</script>'
+                return HttpResponse(res)
+            elif sac_number is not None and EwayBill.objects.filter(sac=sac_number).exists():
+                res = '<script>alert("SAC number already exists!");window.history.back();</script>'
+                return HttpResponse(res)
             env = EwayBill(
                 company = com,
                 login_details = com.login_details,
@@ -28467,6 +28492,8 @@ def createEwayBill(request):
                 shipping_charge = 0.0 if request.POST['ship'] == "" else float(request.POST['ship']),
                 grandtotal = 0.0 if request.POST['grandtotal'] == "" else float(request.POST['grandtotal']),
                 description = request.POST['note'],
+                hsn=request.POST.get('hsnNumber') if request.POST['itemType'] == 'Goods' else None,
+                sac=request.POST.get('sacNumber') if request.POST['itemType'] == 'Services' else None
             )
 
             env.save()
@@ -28557,13 +28584,13 @@ def editewaybill(request,id):
         itms = Items.objects.filter(company = cmp, activation_tag = 'active')
         units = Unit.objects.filter(company=cmp)
         accounts=Chart_of_Accounts.objects.filter(company=cmp)
-
+        trpt = Transportation.objects.all()
         invoice = EwayBill.objects.get(id = id)
         invItems = Eway_bill_item.objects.filter(EwayBill = invoice)
 
         context = {
             'cmp':cmp,'allmodules':allmodules, 'details':dash_details, 'customers': cust,'pTerms':trm, 'items':itms,
-            'units': units,'accounts':accounts, 'invoice':invoice, 'invItems': invItems,
+            'units': units,'accounts':accounts, 'invoice':invoice, 'invItems': invItems,'trpt':trpt
         }
         return render(request, 'zohomodules/eway_bills/edit_eway_bills.html', context)
     else:
@@ -28581,6 +28608,24 @@ def updateewaybill(request,id):
 
         rec_inv = EwayBill.objects.get(id = id)
         if request.method == 'POST':
+            eway_bill_number = request.POST['EwayBill_no']
+            hsn_number = request.POST.get('hsnNumber')
+            sac_number = request.POST.get('sacNumber')
+            print(hsn_number)
+
+            # Check if the Eway Bill number already exists in the database
+            if EwayBill.objects.filter(eway_bill_number=eway_bill_number).exclude(id=id).exists():
+                res = f'<script>alert("Eway Bill already Exists.! Try another!");window.history.back();</script>'
+                return HttpResponse(res)
+
+            
+            # Check if HSN number or SAC number already exists in the database
+            if hsn_number is not None and EwayBill.objects.filter(hsn=hsn_number).exclude(id=id).exists():
+                res = '<script>alert("HSN number already exists!");window.history.back();</script>'
+                return HttpResponse(res)
+            elif sac_number is not None and EwayBill.objects.filter(sac=sac_number).exclude(id=id).exists():
+                res = '<script>alert("SAC number already exists!");window.history.back();</script>'
+                return HttpResponse(res)
             rec_inv.customer = Customer.objects.get(id = request.POST['customerId'])
             rec_inv.customer_email = request.POST['customer_email']
             rec_inv.document_type = request.POST['document_type']
@@ -28605,6 +28650,8 @@ def updateewaybill(request,id):
             rec_inv.shipping_charge = 0.0 if request.POST['ship'] == "" else float(request.POST['ship'])
             rec_inv.grandtotal = 0.0 if request.POST['grandtotal'] == "" else float(request.POST['grandtotal'])
             rec_inv.description = request.POST['note']
+            rec_inv.hsn=request.POST.get('hsnNumber') if request.POST['itemType'] == 'Goods' else None
+            rec_inv.sac=request.POST.get('sacNumber') if request.POST['itemType'] == 'Services' else None
 
             if len(request.FILES) != 0:
                 rec_inv.document=request.FILES.get('file')
@@ -29089,5 +29136,41 @@ def check_eway_bill(request):
             exists = EwayBill.objects.filter(eway_bill_number=bill_no).exists()
             return JsonResponse({'exists': exists})
     return JsonResponse({'exists': False})
+
+
+
+def add_uni(request):                                                                
+    login_id = request.session['login_id']
+    log_user = LoginDetails.objects.get(id=login_id)
+
+    if log_user.user_type == 'Company':
+        if request.method == 'POST':
+            c = CompanyDetails.objects.get(login_details=login_id)
+            unit_name = request.POST['units']
+            
+            if Transportation.objects.filter(transportation = unit_name).exists():
+                return JsonResponse({"message": "error"})
+            else:
+                unit = Transportation(transportation=unit_name, company=c)  
+                unit.save()  
+                return JsonResponse({"message": "success"})
+
+    elif log_user.user_type == 'Staff':
+        if request.method == 'POST':
+            staff = LoginDetails.objects.get(id=login_id)
+            sf = StaffDetails.objects.get(login_details=staff)
+            c = sf.company
+            unit_name = request.POST['units']
+            
+            if Transportation.objects.filter(transportation=unit_name).exists():
+                return JsonResponse({"message": "error"})
+            elif unit_name == 'Bus' or unit_name == 'Train' or unit_name == 'Car':
+                return JsonResponse({"message": "error"})
+            else:
+                unit = Transportation(transportation=unit_name)  
+                unit.save()  
+                return JsonResponse({"message": "success"})
+
+    return JsonResponse({"message": "success"})
 
 

@@ -555,11 +555,13 @@
                         <h6 class="mb-0">Date</h6>
                         <p class="mb-0 text-right">{{invoice.start_date}}</p>
                       </div>
+                      
 
                       <div class="d-flex px-3 justify-content-between text-black mb-2">
                         <h6 class="mb-0">Customer</h6>
                         <p class="mb-0 text-right fw-bold">{{invoice.customer.first_name}} {{invoice.customer.last_name}}</p>
                       </div>
+                      
 
     
                       
@@ -569,11 +571,23 @@
                         <p class="mb-0 text-right">{{invoice.billing_address|linebreaksbr}}</p>
                       </div>
                       {% endif %}
+                      <div class="d-flex px-3 justify-content-between text-black mb-2">
+                        <h6 class="mb-0">Email</h6>
+                        <p class="mb-0 text-right">{{invoice.customer_email}}</p>
+                      </div>
+                      <div class="d-flex px-3 justify-content-between text-black mb-2">
+                        <h6 class="mb-0">Place of supply</h6>
+                        <p class="mb-0 text-right">{{invoice.place_of_supply}}</p>
+                      </div>
+                      <div class="d-flex px-3 justify-content-between text-black mb-2">
+                        <h6 class="mb-0">Transportation Type</h6>
+                        <p class="mb-0 text-right">{{invoice.transportation}}</p>
+                      </div>
                      
                     </div>
 
                     <div class="col-md-6 px-3">
-                      <div class="px-3 py-3 mb-3" style="background-color: #383838; border-radius: 6px;">
+                      <div class="px-3 py-3 mb-3" style="background-color: black; border-radius: 6px;">
                         <h4 class="text-white my-3" style="text-align: center;">Eway Bill Tax Details</h4>
                         <hr class="text-white" style="margin-left: 5%; margin-right: 5%">
                         <div class="d-flex justify-content-between mb-4">
@@ -1656,6 +1670,8 @@
       $('#delete_btn').show();
       $('#share_btn').hide();
       $('#attach_btn').show();
+      $('#comment_btn').show();
+      $('#history_btn').show();
       document.getElementById('over').style.display = 'block'
       document.getElementById('slp').style.display = 'none'
       document.getElementById('tmplt').style.display = 'none'
@@ -1683,8 +1699,10 @@
       $('#print_btn').hide();
       $('#edit_btn').hide();
       $('#delete_btn').hide();
-      $('#share_btn').hide();
+      $('#share_btn').show();
       $('#attach_btn').hide();
+      $('#comment_btn').hide();
+      $('#history_btn').hide();
 
       // $("#print_btn").attr("onclick","printSection('Slip')");
       document.getElementById('over').style.display = 'none'
@@ -1715,6 +1733,8 @@
       $('#attach_btn').hide();
       $('#slipPdf_btn').hide();
       $('#slipPrint_btn').hide();
+      $('#comment_btn').hide();
+      $('#history_btn').hide();
 
       // $("#print_btn").attr("onclick","printSection('whatToPrint')");
       document.getElementById('over').style.display = 'none'

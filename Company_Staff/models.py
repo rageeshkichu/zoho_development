@@ -1743,6 +1743,8 @@ class EwayBill(models.Model):
     place_of_supply = models.CharField(max_length=100, null=True, blank=True)
     eway_billing_address = models.CharField(max_length=100, null=True, blank=True)
     eway_bill_number = models.CharField(max_length=100, null=True, blank=True)
+    hsn = models.CharField(max_length=100, null=True, blank=True)
+    sac = models.CharField(max_length=100, null=True, blank=True)
     reference_no = models.BigIntegerField(null=True, blank=True)
     start_date = models.DateField(null=True, blank=True)
     transaction_type = models.CharField(max_length=100, null=True, blank=True)
@@ -1794,3 +1796,6 @@ class Eway_Bill_Comments(models.Model):
     company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE, null=True)
     eway_bill = models.ForeignKey(EwayBill,on_delete=models.CASCADE,null=True,blank=True)
     comments = models.CharField(max_length=500,null=True,blank=True)
+
+class Transportation(models.Model):
+    transportation = models.CharField(max_length=500,null=True,blank=True)
