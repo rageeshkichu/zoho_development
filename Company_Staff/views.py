@@ -19492,9 +19492,14 @@ def getUnitsAjax(request):
         log_details= LoginDetails.objects.get(id=log_id)
         if log_details.user_type == 'Company':
             com = CompanyDetails.objects.get(login_details = log_details)
+            options = {}
+            option_objects = Unit.objects.filter(company=com)
+            for option in option_objects:
+                options[option.id] = [option.id,option.unit_name]
+            return JsonResponse(options)
         else:
             com = StaffDetails.objects.get(login_details = log_details).company
-
+            
             options = {}
             option_objects = Unit.objects.filter(company=com)
             for option in option_objects:
@@ -28307,34 +28312,22 @@ def loan_check(request):
 def eway_bills(request):
     if 'login_id' in request.session:
         log_id = request.session['login_id']
-        if 'login_id' not in request.session:
-            return redirect('/')
         log_details= LoginDetails.objects.get(id=log_id)
-        if log_details.user_type == 'Staff':
-                dash_details = StaffDetails.objects.get(login_details=log_details)
-                item=Items.objects.filter(company=dash_details.company)
-                allmodules= ZohoModules.objects.get(company=dash_details.company,status='New')
-                bills = EwayBill.objects.all()
-                context = {
-                        'details': dash_details,
-                        'item':item,
-                        'allmodules': allmodules,
-                        'bills':bills
-                }
-                return render(request,'zohomodules/eway_bills/eway_bills.html',context)
         if log_details.user_type == 'Company':
+            cmp = CompanyDetails.objects.get(login_details = log_details)
             dash_details = CompanyDetails.objects.get(login_details=log_details)
-            item=Items.objects.filter(company=dash_details)
-            allmodules= ZohoModules.objects.get(company=dash_details,status='New')
-            bills = EwayBill.objects.all()
-            context = {
-                    'details': dash_details,
-                    'item': item,
-                    'allmodules': allmodules,
-                    'bills':bills
-            }
+        else:
+            cmp = StaffDetails.objects.get(login_details = log_details).company
+            dash_details = StaffDetails.objects.get(login_details=log_details)
 
-            return render(request,'zohomodules/eway_bills/eway_bills.html',context)
+        bills = EwayBill.objects.filter(company = cmp)
+        allmodules= ZohoModules.objects.get(company = cmp)
+        context = {
+            'bills': bills, 'allmodules':allmodules, 'details':dash_details
+        }
+        return render(request, 'zohomodules/eway_bills/eway_bills.html', context)
+    else:
+        return redirect('/')
 
 def create_eway_bill(request):
     if 'login_id' in request.session:
@@ -28353,7 +28346,7 @@ def create_eway_bill(request):
         accounts=Chart_of_Accounts.objects.filter(company=cmp)
         trm = Company_Payment_Term.objects.filter(company = cmp)
         itms = Items.objects.filter(company = cmp, activation_tag = 'active')
-        trpt = Transportation.objects.all()
+        trpt = Transportation.objects.filter(company = cmp)
 
         latest_inv = EwayBill.objects.filter(company = cmp).order_by('-id').first()
 
@@ -28584,7 +28577,7 @@ def editewaybill(request,id):
         itms = Items.objects.filter(company = cmp, activation_tag = 'active')
         units = Unit.objects.filter(company=cmp)
         accounts=Chart_of_Accounts.objects.filter(company=cmp)
-        trpt = Transportation.objects.all()
+        trpt = Transportation.objects.filter(company = cmp)
         invoice = EwayBill.objects.get(id = id)
         invItems = Eway_bill_item.objects.filter(EwayBill = invoice)
 
@@ -29148,12 +29141,13 @@ def add_uni(request):
             c = CompanyDetails.objects.get(login_details=login_id)
             unit_name = request.POST['units']
             
-            if Transportation.objects.filter(transportation = unit_name).exists():
+            if Transportation.objects.filter(transportation = unit_name, company = c).exists():
                 return JsonResponse({"message": "error"})
             else:
-                unit = Transportation(transportation=unit_name, company=c)  
+                unit = Transportation(transportation=unit_name,company = c)  
                 unit.save()  
                 return JsonResponse({"message": "success"})
+        return JsonResponse({"message": "success"})
 
     elif log_user.user_type == 'Staff':
         if request.method == 'POST':
@@ -29162,15 +29156,35 @@ def add_uni(request):
             c = sf.company
             unit_name = request.POST['units']
             
-            if Transportation.objects.filter(transportation=unit_name).exists():
+            if Transportation.objects.filter(transportation=unit_name,company = c).exists():
                 return JsonResponse({"message": "error"})
             elif unit_name == 'Bus' or unit_name == 'Train' or unit_name == 'Car':
                 return JsonResponse({"message": "error"})
             else:
-                unit = Transportation(transportation=unit_name)  
+                unit = Transportation(transportation=unit_name,company = c)  
                 unit.save()  
                 return JsonResponse({"message": "success"})
 
     return JsonResponse({"message": "success"})
+
+def getUnitsAjax2(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            com = CompanyDetails.objects.get(login_details = log_details)
+            options = {}
+            option_objects = Unit.objects.filter(company=com)
+            for option in option_objects:
+                options[option.id] = [option.id,option.unit_name]
+            return JsonResponse(options)
+        else:
+            com = StaffDetails.objects.get(login_details = log_details).company
+            
+            options = {}
+            option_objects = Unit.objects.filter(company=com)
+            for option in option_objects:
+                options[option.id] = [option.id,option.unit_name]
+            return JsonResponse(options)
 
 

@@ -409,7 +409,7 @@
                             </td>
                             
                             <td>
-                              <span style="float: right;" class="amt">&#8377;{{ inv.balance }}</span><br><br>
+                              <span style="float: right;" class="amt">&#8377;{{ inv.grandtotal }}</span><br><br>
                               <span style="float: right;" class="stat">{{inv.status}}</span>
                             </td>
                           </tr>
@@ -543,6 +543,36 @@
 
                       <div class="row mt-4">
                         <div class="col-md-8">
+                          <h5 class="fw-bold" style="border-bottom: 1px solid rgba(128, 128, 128, 0.6); width: fit-content;">Customer Details</h5>
+                        </div>
+                        <div class="col-md-4"></div>
+                      </div>
+                      <div class="d-flex px-3 justify-content-between text-black mb-2">
+                        <h6 class="mb-0">Customer</h6>
+                        <p class="mb-0 text-right fw-bold">{{invoice.customer.first_name}} {{invoice.customer.last_name}}</p>
+                      </div>
+                      <div class="d-flex px-3 justify-content-between text-black mb-2">
+                        <h6 class="mb-0">Email</h6>
+                        <p class="mb-0 text-right">{{invoice.customer.customer_email}}</p>
+                      </div>
+                      <div class="d-flex px-3 justify-content-between text-black mb-2">
+                        <h6 class="mb-0">GST TYPE</h6>
+                        <p class="mb-0 text-right ">{{invoice.gst_type}}</p>
+                      </div>
+                      <div class="d-flex px-3 justify-content-between text-black mb-2">
+                        <h6 class="mb-0">GST NUMBER</h6>
+                        <p class="mb-0 text-right">{{invoice.gstin}}</p>
+                      </div>
+                      <div class="d-flex px-3 justify-content-between text-black mb-2">
+                        <h6 class="mb-0">Place of supply</h6>
+                        <p class="mb-0 text-right">{{invoice.place_of_supply}}</p>
+                      </div>
+                      
+
+
+
+                      <div class="row mt-4">
+                        <div class="col-md-8">
                           <h5 class="fw-bold" style="border-bottom: 1px solid rgba(128, 128, 128, 0.6); width: fit-content;">Eway Bill Details</h5>
                         </div>
                         <div class="col-md-4"></div>
@@ -557,10 +587,7 @@
                       </div>
                       
 
-                      <div class="d-flex px-3 justify-content-between text-black mb-2">
-                        <h6 class="mb-0">Customer</h6>
-                        <p class="mb-0 text-right fw-bold">{{invoice.customer.first_name}} {{invoice.customer.last_name}}</p>
-                      </div>
+                      
                       
 
     
@@ -571,14 +598,8 @@
                         <p class="mb-0 text-right">{{invoice.billing_address|linebreaksbr}}</p>
                       </div>
                       {% endif %}
-                      <div class="d-flex px-3 justify-content-between text-black mb-2">
-                        <h6 class="mb-0">Email</h6>
-                        <p class="mb-0 text-right">{{invoice.customer_email}}</p>
-                      </div>
-                      <div class="d-flex px-3 justify-content-between text-black mb-2">
-                        <h6 class="mb-0">Place of supply</h6>
-                        <p class="mb-0 text-right">{{invoice.place_of_supply}}</p>
-                      </div>
+                     
+                      
                       <div class="d-flex px-3 justify-content-between text-black mb-2">
                         <h6 class="mb-0">Transportation Type</h6>
                         <p class="mb-0 text-right">{{invoice.transportation}}</p>

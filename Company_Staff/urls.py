@@ -701,6 +701,7 @@ urlpatterns = [
     path('importewaybillexell', views.importewaybillexell, name= 'importewaybillexell'),
     path('check_eway_bill/', views.check_eway_bill, name='check_eway_bill'),
     path('add_uni', views.add_uni, name = 'add_uni'),
+    path('get_units_ajax2',views.getUnitsAjax2, name='getUnitsAjax2'),
     # -------------------------Eway Bills End ------Ambadi G------------------------- 
     
     re_path(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}),

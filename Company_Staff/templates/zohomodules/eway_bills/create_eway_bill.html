@@ -558,12 +558,12 @@
         var placeholderValue = $('#EwayBill_no').attr('placeholder');
         var prevNumber = parseInt(placeholderValue.replace(/\D/g, '')); // Extract numeric part from placeholder
         
-        if (!pattern.test(billNo)) {
-            $('#bill_no_message').text('E Way Bill number should be in the format EWXXX (e.g., EW001).');
-            return; // Exit the function if the input doesn't match the pattern
-        } else {
-            $('#bill_no_message').text('');
-        }
+        // if (!pattern.test(billNo)) {
+        //     $('#bill_no_message').text('E Way Bill number should be in the format EWXXX (e.g., EW001).');
+        //     return; // Exit the function if the input doesn't match the pattern
+        // } else {
+        //     $('#bill_no_message').text('');
+        // }
 
         $.ajax({
             url: "{% url 'check_eway_bill' %}",
@@ -1175,6 +1175,7 @@ function calc_total() {
     });
 
 </script>
+
     
 <!-- New item Modal -->
     <div class="modal fade" id="newItem">
@@ -1370,7 +1371,7 @@ function calc_total() {
                                    
                                 
                                   </select>                    
-                                  <a class="btn btn-outline-warning py-2 ms-1" style="cursor: pointer;" data-toggle="modal" data-target="#newAccount" style="height: 38px;">+</a>
+                                  <!--<a class="btn btn-outline-warning py-2 ms-1" style="cursor: pointer;" data-toggle="modal" data-target="#newAccount" style="height: 38px;">+</a>-->
            
                               </div>
                              
@@ -1483,6 +1484,696 @@ function calc_total() {
     </div>
 </div>
 
+
+
+<!-- New Account Modal -->
+
+<div class="modal fade" id="newAccount">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content" style="background: rgb(32, 35, 37);border-radius: 20px;">
+        <div class="modal-header" style="background: rgb(32, 35, 37);">
+          <h5 class="m-3 text-uppercase" id="shareBillEmailLabel" style="color: #eeeaea;"><b>New Account</b></h5>
+          <button type="button" class="close" style="width: 30px;" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </div>
+        <div class="modal-body" style="background: rgb(32, 35, 37);">
+          <div class="card p-3 m-3" style="background-color: #000;">
+          
+           
+              <form method="post"  style="color: #000000;" id="newAccountForm">
+                {% csrf_token %}
+                {% for m in messages %}
+                <p style="color: chocolate;">{{m}}</p>
+                {% endfor %}
+                  <div class="d-flex align-items-center">
+                      <h5 style="font-size: 25px;color: aliceblue;">Create Account</h5>
+                    
+                  </div>
+                  <div id="error-message-container2" style="color: chocolate;"></div>
+                  <hr>
+                  <div class="row ">
+                      <div class="col">
+                          <div class="row">
+                              <div class="col-sm-4">
+                                  <label for="">Account Type:</label>
+                              </div>
+                              <div class="col-sm-8">
+                                  <div class="select-box1" onclick="message()">
+                                      <div class="select-option1">
+                                          <input type="text" placeholder="select" style="width: 100%;"  id="soValue1" name="account_type"readonly>
+                                      </div>
+                                      <div class="content1" id="myDropdown1">
+                                          <div class="search1">
+                                              <input type="text" placeholder="search" id="myInput1" onkeyup="filterFunction1()">
+                                          </div>
+                                          <ul class="options1" style="color: #000000;">
+                                              <div class="opt" style="color: #000000;">
+                                                  <span style="font-weight: bold;color: #000;">Assets</span>
+                                                  <li style="color: #000000;">Other Assets</li>
+                                                  <li>Other Current Assets</li>
+                                                  <li>Cash</li>
+                                                  <li>Bank</li>
+                                                  <li>Fixed Asset</li>
+                                                  <li>Stock</li>
+                                                  <li>Payment Clearing</li>
+                                              </div>
+          
+                                              <div class="opt">
+                                                  <span style="font-weight: bold;color: #000;">Liability</span>
+                                                  <li>Other Liability</li>
+                                                  <li>Other Current Liability</li>
+                                                  <li>Credit Card</li>
+                                                  <li>Long Term Liability</li>
+                                                  <li>Overseas Tax Payable</li>
+                                              </div>
+          
+                                              <div class="opt">
+                                                  <span style="font-weight: bold;color: #000;">Equity</span>
+                                                  <li>Equity</li>
+                                              </div>
+          
+                                              <div class="opt">
+                                                  <span style="font-weight: bold;color: #000;">Income</span>
+                                                  <li>Income</li>
+                                                  <li>Other Income</li>
+                                              </div>
+          
+                                              <div class="opt">
+                                                  <span style="font-weight: bold;color: #000;">Expense</span>
+                                                  <li>Expense</li>
+                                                  <li>Cost Of Goods Sold</li>
+                                                  <li>Other Expense</li>
+                                              </div>
+                                          </ul>
+          
+          
+          
+                                      </div>
+                                  </div>
+          
+                              </div>
+          
+                              <script>
+                                  const selectBox1 = document.querySelector('.select-box1');
+                                  const selectOption1 = document.querySelector('.select-option1');
+                                  const optionsList1 = document.querySelectorAll('.options1 li');
+                                  const soValue1 = document.querySelector('#soValue1');
+          
+                                  selectOption1.addEventListener('click', function () {
+                                      selectBox1.classList.toggle('active')
+                                  })
+          
+                                  optionsList1.forEach(function (optionsListSingle) {
+                                      optionsListSingle.addEventListener('click', function () {
+                                          text = this.textContent;
+                                          soValue1.value = text;
+                                          selectBox1.classList.remove('active')
+          
+                                      })
+                                  })
+                              </script>
+                          </div>
+                          <div id="name" style="display: block;">
+                              <div class="row mt-3">
+                                  <div class="col-sm-4">
+                                      <label for="">Account Name:</label>
+                                  </div>
+                                  <div class="col-sm-8">
+                                      <input type="text" class="form-control text-dark bg-light" name="account_name"
+                                          id="account_name" style="width: 100%;" required>
+                                  </div>
+                              </div>
+                          </div>
+          
+                          <div id="credit" style="display: none;">
+                              <div class="row mt-3">
+                                  <div class="col-sm-4">
+                                      <label for="">Credit Card Name:</label>
+                                  </div>
+                                  <div class="col-sm-8">
+                                      <input type="text" class="form-control text-dark bg-light" style="width: 70%;" name="credit_number"
+                                          id="credit_number">
+                                  </div>
+                              </div>
+                          </div>
+          
+                          <div id="sub_div" style="display: none;">
+
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for=""></label>
+                                </div>
+                        
+                                <div class="col-sm-8">
+                        
+                                    <input type="checkbox" class=" text-dark bg-light" onclick="show_parent()"
+                                        name="sub_account" id="sub_account">
+                        
+                                    <label for="">Make this a sub-account</label>
+                        
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="sub_div22" style="display: none;">
+
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for=""></label>
+                                </div>
+                        
+                                <div class="col-sm-8">
+                        
+                                    <input type="checkbox" class=" text-dark bg-light" onclick="show_parent22()"
+                                        name="sub_account22" id="sub_account22">
+                        
+                                    <label for="">Make this a sub-account</label>
+                        
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="sub_div33" style="display: none;">
+                        
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for=""></label>
+                                </div>
+                        
+                                <div class="col-sm-8">
+                        
+                                    <input type="checkbox" class=" text-dark bg-light" onclick="show_parent33()"
+                                        name="sub_account33" id="sub_account33">
+                        
+                                    <label for="">Make this a sub-account</label>
+                        
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="sub_div44" style="display: none;">
+                        
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for=""></label>
+                                </div>
+                        
+                                <div class="col-sm-8">
+                        
+                                    <input type="checkbox" class=" text-dark bg-light" onclick="show_parent44()"
+                                        name="sub_account44" id="sub_account44">
+                        
+                                    <label for="">Make this a sub-account</label>
+                        
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="sub_div55" style="display: none;">
+                        
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for=""></label>
+                                </div>
+                        
+                                <div class="col-sm-8">
+                        
+                                    <input type="checkbox" class=" text-dark bg-light" onclick="show_parent55()"
+                                        name="sub_account55" id="sub_account55">
+                        
+                                    <label for="">Make this a sub-account</label>
+                        
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <div id="sub_div66" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for=""></label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="checkbox" class=" text-dark bg-light" onclick="show_parent66()"
+                                        name="sub_account66" id="sub_account66">
+                                    <label for="">Make this a sub-account</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        
+                        <div id="sub_div77" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for=""></label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="checkbox" class=" text-dark bg-light" onclick="show_parent77()"
+                                        name="sub_account77" id="sub_account77">
+                                    <label for="">Make this a sub-account</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        
+                        <div id="sub_div88" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for=""></label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="checkbox" class=" text-dark bg-light" onclick="show_parent88()"
+                                        name="sub_account88" id="sub_account88">
+                                    <label for="">Make this a sub-account</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="sub_div99" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for=""></label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="checkbox" class=" text-dark bg-light" onclick="show_parent99()"
+                                        name="sub_account99" id="sub_account99">
+                                    <label for="">Make this a sub-account</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="sub_div100" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for=""></label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="checkbox" class=" text-dark bg-light" onclick="show_parent100()"
+                                        name="sub_account100" id="sub_account100">
+                                    <label for="">Make this a sub-account</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="sub_div111" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for=""></label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="checkbox" class=" text-dark bg-light" onclick="show_parent111()"
+                                        name="sub_account111" id="sub_account111">
+                                    <label for="">Make this a sub-account</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="sub_div222" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for=""></label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <input type="checkbox" class=" text-dark bg-light" onclick="show_parent222()"
+                                        name="sub_account222" id="sub_account222">
+                                    <label for="">Make this a sub-account</label>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div id="parent_div" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for="">Parent Account:</label>
+                                </div>
+                                <div class="col-sm-8">
+                        
+                                    <select class="form-control text-dark bg-light" style="width: 70%;" name="parent_account" id="parent_account">
+                                        <option value="" class="bg-dark text-light text-center"  disabled>Other Current
+                                            Assets
+                                        </option>
+                                        <option value="" selected></option>
+                                        <option value="Advance Tax">Advance Tax</option>
+                                        <option value="Employee Advance">Employee Advance</option>
+                                        <option value="Prepaid Expenses">Prepaid Expenses</option>
+                                        <option value="GST TCS Receivable">GST TCS Receivable</option>
+                                        <option value="GST TDS Receivable">GST TCS Receivable</option>
+                                        <option value="Input Tax Credits">Input Tax Credits</option>
+                                        <option value="Input CGST">&nbsp; &nbsp;&nbsp;Input CGST</option>
+                                        <option value="Input IGST"> &nbsp; &nbsp;&nbsp;Input IGST</option>
+                                        <option value="Input SGST">&nbsp; &nbsp;&nbsp;Input SGST</option>
+                        
+                        
+                                        <option value="Reverse Charge Tax Input but no due">Reverse Charge Tax Input but no
+                                            due
+                                        </option>
+                                        <option value="Sales to Customers(Cash)">Sales to Customers(Cash)</option>
+                        
+                        
+                                        <option value="TDS Receivable">TDS Receivable</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <div id="parent_div22" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for="">Parent Account:</label>
+                                </div>
+                                <div class="col-sm-8">
+                        
+                                    <select class="form-control text-dark bg-light" style="width: 70%;" name="parent_account22"
+                                        id="parent_account22">
+                                        <option value="" class="bg-dark text-light text-center" disabled>Cash</option>
+                                        <option value="" class="bg-dark text-light text-center" selected></option>
+                        
+                                        <option value="Petty Cash">Petty Cash</option>
+                                        <option value="Undeposited Fund">Undeposited Fund</option>
+                                        <option value="Cash Account">Cash Account</option>
+                        
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="parent_div33" style="display:none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for="">Parent Account:</label>
+                                </div>
+                                <div class="col-sm-8">
+                        
+                                    <select class="form-control text-dark bg-light" style="width: 70%;" name="parent_account33"
+                                        id="parent_account33">
+                                        <option value="" class="bg-dark text-light text-center" disabled>Fixed Asset
+                                        </option>
+                                        <option value="" class="bg-dark text-light text-center" selected></option>
+                        
+                                        <option value="Furniture and Equipment">Furniture and Equipment</option>
+                        
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        
+                        <div id="parent_div44" style="display:none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for="">Parent Account:</label>
+                                </div>
+                                <div class="col-sm-8">
+                        
+                                    <select class="form-control text-dark bg-light" style="width: 70%;" name="parent_account44"
+                                        id="parent_account44">
+                                        <option value="" class="bg-dark text-light text-center" disabled>Stock</option>
+                                        <option value="" class="bg-dark text-light text-center" selected></option>
+                        
+                                        <option value="Inventory Asset">Inventory Asset</option>
+                        
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <div id="parent_div55" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for="">Parent Account:</label>
+                                </div>
+                                <div class="col-sm-8">
+                        
+                                    <select class="form-control text-dark bg-light" style="width: 70%;" name="parent_account55"
+                                        id="parent_account55">
+                                        <option value="" class="bg-dark text-light text-center" disabled>Other Current
+                                            Liability
+                                        </option>
+                                        <option value="" class="bg-dark text-light text-center" selected></option>
+                        
+                                        <option value="Employee Reimbursements">Employee Reimbursements</option>
+                                        <option value="Opening Balance Adjustments">Opening Balance Adjustments</option>
+                                        <option value="Tax Payable">Tax Payable</option>
+                                        <option value="Unearned Revenue">Unearned Revenue</option>
+                                        <option value="GST Payable">GST Payable</option>
+                                        <option value="Output CGST">&nbsp;&nbsp;&nbsp;Output CGST</option>
+                                        <option value="Output IGST">&nbsp;&nbsp;&nbsp;Output IGST</option>
+                                        <option value="Output SGST">&nbsp;&nbsp;&nbsp;Output SGST</option>
+                                        <option value="TDS Payable">TDS Payable</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <div id="parent_div66" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for="">Parent Account:</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <select class="form-control text-dark bg-light" style="width: 70%;" name="parent_account66"
+                                        id="parent_account66">
+                                        <option value="" class="bg-dark text-light text-center" disabled>Long Term Liability
+                                        </option>
+                                        <option value="" selected></option>
+                                        <option value="Construction Loans">Construction Loans</option>
+                                        <option value="Mortgages">Mortgages</option>
+                        
+                        
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <div id="parent_div77" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for="">Parent Account:</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <select class="form-control text-dark bg-light" style="width: 70%;" name="parent_account77"
+                                        id="parent_account77">
+                                        <option value="" class="bg-dark text-light text-center" disabled>Other Liability
+                                        </option>
+                                        <option value="" selected></option>
+                                        <option value="Tag Adjustments">Tag Adjustments</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <div id="parent_div88" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for="">Parent Account:</label>
+                                </div>
+                                <div class="col-sm-8">
+                        
+                                    <select class="form-control text-dark bg-light" style="width: 70%;" name="parent_account88"
+                                        id="parent_account88">
+                                        <option value="" class="bg-dark text-light text-center" disabled>Equity</option>
+                                        <option value="" selected></option>
+                                        <option value="Drawings">Drawings</option>
+                                        <option value="Opening Balance Offset">Opening Balance Offset</option>
+                                        <option value="Owner's Equity">Owner's Equity</option>
+                                        <option value="Retained Earnings">Retained Earnings</option>
+                                        <option value="Capital Stock">Capital Stock</option>
+                                        <option value="Distributions">Distributions</option>
+                                        <option value="Dividends Paid">Dividends Paid</option>
+                                        <option value="Investments">Investments</option>
+                        
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <div id="parent_div99" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for="">Parent Account:</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <select class="form-control text-dark bg-light" style="width: 70%;" name="parent_account99"
+                                        id="parent_account99">
+                                        <option value="" class="bg-dark text-light text-center" disabled>Income</option>
+                                        <option value="" selected></option>
+                                        <option value="Discount">Discount</option>
+                                        <option value="General Income">General Income</option>
+                                        <option value="Interest Income">Interest Income</option>
+                                        <option value="Late Fee Income">Late Fee Income</option>
+                                        <option value="Other Charges">Other Charges</option>
+                                        <option value="sales">sales</option>
+                                        <option value="Shipping Charge">Shipping Charge</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        
+                        <div id="parent_div100" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for="">Parent Account:</label>
+                                </div>
+                                <div class="col-sm-8">
+                                    <select class="form-control text-dark bg-light" style="width: 70%;" name="parent_account100"
+                                        id="parent_account100">
+                                        <option value="" class="bg-dark text-light text-center" disabled>Expense</option>
+                                        <option value="" selected></option>
+                                        <option value="Discount">Discount</option>
+                                        <option value="Advertising and Marketing">Advertising and Marketing</option>
+                                        <option value="Automobile Expense">Automobile Expense</option>
+                                        <option value="Bad Debt">Bad Debt</option>
+                                        <option value="Bank Fees and Charges">Bank Fees and Charges</option>
+                                        <option value="Consultant Expense">Consultant Expense</option>
+                                        <option value="Credit Card Charges">Credit Card Charges</option>
+                                        <option value="Depreciation Expense">Depreciation Expense</option>
+                                        <option value="IT and Internet Expenses">IT and Internet Expenses</option>
+                                        <option value="Ganitorial Expense">Ganitorial Expense</option>
+                                        <option value="Lodging">Lodging</option>
+                                        <option value="Meals and Entertainment">Meals and Entertainment</option>
+                                        <option value="Office Supplies">Office Supplies</option>
+                                        <option value="Other Expenses">Other Expenses</option>
+                                        <option value="Postage">Postage</option>
+                                        <option value="Printing and Stationery">Printing and Stationery</option>
+                                        <option value="Rent Expense">Rent Expense</option>
+                                        <option value="Repairs and Maintenance">Repairs and Maintenance</option>
+                                        <option value="Salaries and Employee Wages">Salaries and Employee Wages</option>
+                                        <option value="Telephone Expense">Telephone Expense</option>
+                                        <option value="Travel Expense">Travel Expense</option>
+                                        <option value="Uncategorized">Uncategorized</option>
+                                        <option value="Contract Assets">Contract Assets</option>
+                                        <option value="Depreciation And Amortisation">Depreciation And Amortisation</option>
+                                        <option value="Merchandise">Merchandise</option>
+                                        <option value="Raw Materials And Consumables">Raw Materials And Consumables</option>
+                                        <option value="Transportation Expense">Uncategorized</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        
+                        <div id="parent_div111" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for="">Parent Account:</label>
+                                </div>
+                                <div class="col-sm-8">
+                        
+                                    <select class="form-control text-dark bg-light" style="width: 70%;" name="parent_account111"
+                                        id="parent_account111">
+                                        <option value="" class="bg-dark text-light text-center" disabled>Cost Of Goods Sold
+                                        </option>
+                                        <option value="" selected></option>
+                                        <option value="Cost Of Goods Sold">Cost Of Goods Sold</option>
+                                        <option value="Job Costing">Job Costing</option>
+                                        <option value="Labor">Labor</option>
+                                        <option value="Materials">Materials</option>
+                                        <option value="Subcontractor">Subcontractor</option>
+                        
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        <div id="parent_div222" style="display: none;">
+                            <div class="row mt-3">
+                                <div class="col-sm-4">
+                                    <label for="">Parent Account:</label>
+                                </div>
+                                <div class="col-sm-8">
+                        
+                                    <select class="form-control text-dark bg-light" style="width: 70%;" name="parent_account222"
+                                        id="parent_account222">
+                                        <option value="" class="bg-dark text-light text-center" disabled>Other Expense
+                                        </option>
+                                        <option value="" selected></option>
+                                        <option value="Cost Of Goods Sold">Exchange Gain or Loss</option>
+                        
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+          
+          
+          
+                          <div class="row mt-3">
+                              <div class="col-sm-4">
+                                  <label for="">Account Code:</label>
+                              </div>
+                              <div class="col-sm-8">
+                                  <input type="text" class="form-control text-dark bg-light" name="account_code"
+                                      id="account_code" style="width: 100%;">
+                              </div>
+                          </div>
+                          <div style="display: none;" id="acc_bo_div">
+                              <div class="row mt-3">
+                                  <div class="col-sm-4">
+                                      <label for="">Account Number:</label>
+                                  </div>
+                                  <div class="col-sm-8">
+                                      <input type="text" class="form-control text-dark bg-light" name="account_number"
+                                          id="account_number" style="width: 100%;">
+                                  </div>
+                              </div>
+                          </div>
+          
+                          <div style="display: none;" id="cr_div">
+                              <div class="row mt-3">
+                                  <div class="col-sm-4">
+                                      <label for="">Currency:</label>
+                                  </div>
+                                  <div class="col-sm-8">
+                                      <input type="text" class="form-control text-dark bg-light" name="currency" id="currency" style="width: 100%;">
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="row mt-3">
+                              <div class="col-sm-4">
+                                  <label for="">Description:</label>
+                              </div>
+                              <div class="col-sm-8">
+                                  <textarea name="description" class="form-control text-dark bg-light" id="description"
+                                      placeholder="Max. 500 characters" style="width: 100%;"></textarea>
+                              </div>
+                          </div>
+          
+                      </div>
+          
+                      <div class="col-sm">
+                          <div class="alert alert-warning alert-dismissible fade show" style="width: 50%;" >
+                              <span id="message_hd" style="color: #000000;">Assets</span> <br>
+                              <span id="message" style="color: #000000;">Track special assets like goodwill and other intangible assets</span>
+                              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="row mt-5">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                    <div class="d-flex justify-content-center">
+                        <button class="btn save_btn rounded-pill text-grey w-25 my-1 mx-1 btn-outline-warning" type="button" id="newAccountSave">Save</button>
+                        <button type="button" class="close btn save_btn rounded-pill text-grey w-25 my-1 mx-1 btn-outline-warning close_account_modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">Cancel</span></button>
+                    </div>
+                    </div>
+                </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
                         
                         
   <script>
@@ -1520,7 +2211,7 @@ function calc_total() {
       function reloadUnit(unit) {
       
         $.ajax({
-                url: "{% url 'getUnitsAjax' %}",
+                url: "{% url 'getUnitsAjax2' %}",
                 type: "GET",
                 dataType: "json",
                 data: $(this).serialize(),
@@ -3638,6 +4329,64 @@ if (vals == "Other Expense") {
     </div>
 </div>
 
+<!-- New Customer Payment Term -->
+<div class="modal fade" id="newpayment">
+    <div class="modal-dialog modal-md">
+    <div class="modal-content" style="background: rgb(32, 35, 37);border-radius: 20px;">
+        <div class="modal-header " style="background: rgb(32, 35, 37);">
+            <h3 class="m-3 text-uppercase" style="color: white;">Add Payment Term</h3>
+            <button type="button" class="close btn btn-danger" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body" style="background: rgb(32, 35, 37);">
+        <div class="card p-3 m-3" style="background-color: #141414a2;">
+            <form action="" method="post" class="needs-validation" novalidate autocomplete="off" id="modalPayment_terms">
+            
+  
+  
+            <div class="row mt-2">
+  
+                <div class="col-lg-12 col-md-12 col-sm-12 mt-2">
+                    <label for="termname" style="color: white">Term Name *</label>
+  
+                <input type="text " class="form-control text-dark bg-light mt-2" id="tname" name="term_name" autocapitalize="characters" required> 
+                <span id="message-id" class="mt-1 text-danger" style="font-size: 10px;"></span> 
+                <span id="success-message-id" class=" mt-1 text-success" style="font-size: 10px;"></span>    
+                </div>
+  
+                <div class="col-lg-12 col-md-12 col-sm-12 mt-2">
+                    <label for="termdays" style="color: white">Number of Days *</label>
+  
+                <input type="number" class="form-control text-dark bg-light mt-2" id="tdays" name="term_days" autocapitalize="characters" required>
+                </div>
+                <div class="col-md-2 mt-2"></div>
+  
+            </div>
+            
+            <div class="row mt-5">
+                <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="d-flex">
+                    <button class="btn save_btn rounded-pill text-grey w-50 my-1 mx-1 btn-outline-warning "
+                    type="submit" data-dismiss="modal" id="customerPaymentTermSave">Save
+                    </button> 
+                    
+  
+                    <button type="button" class="close btn save_btn rounded-pill text-grey w-50 my-1 mx-1 btn-outline-warning" 
+                    data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">Cancel</span>
+                    </button>
+                </div>
+                </div>
+            </div>
+            </form>
+        </div>
+        </div>
+    </div>
+    </div>  
+  </div>
+  
+
 <script>
 $(document).on("click", "#newUnitSav", function(event) {
 event.preventDefault(); // Prevent the default form submission
@@ -4300,46 +5049,38 @@ $('#mphone').on('input', function() {
       });
   });
 
-  $(document).on("click","#customerPaymentTermSave",function(){
-        var trm = $('#tname').val();
-        var dys = $("#tdays").val();
-        if (trm !="" && dys !=""){
-            $.ajax({
-                type : 'POST',
-                url:"{% url 'newPaymentTermAjax' %}",
-                data:{
-                    'term' : trm,
-                    'days' : dys,
-                    csrfmiddlewaretoken: '{{ csrf_token }}'
-                },
-                
-                success: function(response) {
-                    if(response.status){
-                        document.getElementById("newTermForm").reset();
-                        
-                        var dropdown = $('#paytearm-select');
-                        dropdown.empty();
-                        dropdown.append(`<option value="" selected>Choose</option>`);
-                        $.each(response, function(key, value) {
-                            for(let i=0; i<value.length; i++){
-                                if(value[i].name == trm){
-                                    dropdown.append($('<option selected></option>').text(value[i].name).val(value[i].id))
-                                }else{
-                                    dropdown.append($('<option></option>').text(value[i].name).val(value[i].id))
-                                }   
-                            }
-                        });
+  $(document).on("click", "#customerPaymentTermSave", function() {
+    var trm = $('#tname').val();
+    var dys = $("#tdays").val();
+    if (trm !== "" && dys !== "") {
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'newPaymentTermAjax' %}",
+            data: {
+                'term': trm,
+                'days': dys,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.status) {
+                    
 
-                    }else{
-                        alert("Something went wrong.!")
-                    }
-                },         
-            });
-        }
-        else{
-            alert('Invalid')
-        }
-    });
+                    // Append new item to the input field
+                    $('#newTermForm').val(trm);
+
+                    // Append new item to the dropdown list
+                    var dropdown = $('#paytearm-select');
+                    dropdown.append($('<option></option>').text(trm).val(response.term_id)).val(response.term_id);
+                } else {
+                    alert("Something went wrong.!");
+                }
+            },
+        });
+    } else {
+        alert('Invalid');
+    }
+});
+
 
 console.log('before click')
   $(document).on("click", "#newCustomerSave", function(){

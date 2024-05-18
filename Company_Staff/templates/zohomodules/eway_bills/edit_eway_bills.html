@@ -616,12 +616,12 @@
             var billNo = $(this).val();
             var pattern = /^EW\d{3}$/;
 
-            if (!pattern.test(billNo)) {
-                $('#bill_no_message').text('E Way Bill number should be in the format EWXXX (e.g., EW001).');
-                return; // Exit the function if the input doesn't match the pattern
-            } else {
-                $('#bill_no_message').text('');
-            }
+            // if (!pattern.test(billNo)) {
+            //     $('#bill_no_message').text('E Way Bill number should be in the format EWXXX (e.g., EW001).');
+            //     return; // Exit the function if the input doesn't match the pattern
+            // } else {
+            //     $('#bill_no_message').text('');
+            // }
 
             $.ajax({
                 url: "{% url 'check_eway_bill' %}",
@@ -1435,7 +1435,7 @@ function calc_total() {
                                    
                                 
                                   </select>                    
-                                  <a class="btn btn-outline-warning py-2 ms-1" style="cursor: pointer;" data-toggle="modal" data-target="#newAccount" style="height: 38px;">+</a>
+                                  <!--<a class="btn btn-outline-warning py-2 ms-1" style="cursor: pointer;" data-toggle="modal" data-target="#newAccount" style="height: 38px;">+</a>-->
            
                               </div>
                              
@@ -1585,7 +1585,7 @@ function calc_total() {
       function reloadUnit(unit) {
       
         $.ajax({
-                url: "{% url 'getUnitsAjax' %}",
+                url: "{% url 'getUnitsAjax2' %}",
                 type: "GET",
                 dataType: "json",
                 data: $(this).serialize(),
@@ -3735,6 +3735,63 @@ $("#error-message-container").text("transportation type exists");
     </div>  
   </div>
 
+  <!-- New Customer Payment Term -->
+<div class="modal fade" id="newpayment">
+    <div class="modal-dialog modal-md">
+    <div class="modal-content" style="background: rgb(32, 35, 37);border-radius: 20px;">
+        <div class="modal-header " style="background: rgb(32, 35, 37);">
+            <h3 class="m-3 text-uppercase" style="color: white;">Add Payment Term</h3>
+            <button type="button" class="close btn btn-danger" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body" style="background: rgb(32, 35, 37);">
+        <div class="card p-3 m-3" style="background-color: #141414a2;">
+            <form action="" method="post" class="needs-validation" novalidate autocomplete="off" id="modalPayment_terms">
+            
+  
+  
+            <div class="row mt-2">
+  
+                <div class="col-lg-12 col-md-12 col-sm-12 mt-2">
+                    <label for="termname" style="color: white">Term Name *</label>
+  
+                <input type="text " class="form-control text-dark bg-light mt-2" id="tname" name="term_name" autocapitalize="characters" required> 
+                <span id="message-id" class="mt-1 text-danger" style="font-size: 10px;"></span> 
+                <span id="success-message-id" class=" mt-1 text-success" style="font-size: 10px;"></span>    
+                </div>
+  
+                <div class="col-lg-12 col-md-12 col-sm-12 mt-2">
+                    <label for="termdays" style="color: white">Number of Days *</label>
+  
+                <input type="number" class="form-control text-dark bg-light mt-2" id="tdays" name="term_days" autocapitalize="characters" required>
+                </div>
+                <div class="col-md-2 mt-2"></div>
+  
+            </div>
+            
+            <div class="row mt-5">
+                <div class="col-lg-12 col-md-12 col-sm-12">
+                <div class="d-flex">
+                    <button class="btn save_btn rounded-pill text-grey w-50 my-1 mx-1 btn-outline-warning "
+                    type="submit" data-dismiss="modal" id="customerPaymentTermSave">Save
+                    </button> 
+                    
+  
+                    <button type="button" class="close btn save_btn rounded-pill text-grey w-50 my-1 mx-1 btn-outline-warning" 
+                    data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">Cancel</span>
+                    </button>
+                </div>
+                </div>
+            </div>
+            </form>
+        </div>
+        </div>
+    </div>
+    </div>  
+  </div>
+
   
 
   <script>
@@ -4380,7 +4437,7 @@ $('#mphone').on('input', function() {
                 
                 success: function(response) {
                     if(response.status){
-                        document.getElementById("newTermForm").reset();
+                        
                         
                         var dropdown = $('#paytearm-select');
                         dropdown.empty();

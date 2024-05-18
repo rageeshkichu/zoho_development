@@ -1799,3 +1799,4 @@ class Eway_Bill_Comments(models.Model):
 
 class Transportation(models.Model):
     transportation = models.CharField(max_length=500,null=True,blank=True)
+    company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE)
